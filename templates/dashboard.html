@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Gym App{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h2>Welcome to Your Dashboard</h2>
+
+  {% if message %}
+    <div class="message">
+      {{ message }}
+    </div>
+  {% endif %}
+
+  <!-- MEMBERSHIP SELECTION -->
+  <section class="card">
+    <h3>Membership</h3>
+    <form method="POST">
+      <input type="hidden" name="form_type" value="membership"/>
+      <label for="plan_id">Select a Plan:</label>
+      <select name="plan_id">
+        {% for plan in membership_plans %}
+          <option value="{{ plan.id }}">{{ plan.name }} – {{ plan.duration }} – {{ plan.price }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">Update Membership</button>
+    </form>
+  </section>
+
+  <!-- CLASS BOOKING -->
+  <section class="card">
+    <h3>Book a Fitness Class</h3>
+    <form method="POST">
+      <input type="hidden" name="form_type" value="book_class"/>
+      <label for="class_id">Select a Class:</label>
+      <select name="class_id">
+        {% for c in fitness_classes %}
+          <option value="{{ c.id }}">{{ c.name }} – {{ c.day }} @ {{ c.time }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">Book Class</button>
+    </form>
+  </section>
+
+  <!-- WORKOUT LOGGING -->
+  <section class="card">
+    <h3>Log a Workout</h3>
+    <form method="POST">
+      <input type="hidden" name="form_type" value="log_workout"/>
+      <label for="workout_details">Workout Details:</label>
+      <textarea name="workout_details" rows="3" cols="40"></textarea>
+      <br/>
+      <button type="submit">Log Workout</button>
+    </form>
+  </section>
+
+  <!-- DISPLAY WORKOUT HISTORY -->
+  <section class="card">
+    <h3>Your Workout History</h3>
+    {% if workout_logs %}
+      <ul>
+        {% for w in workout_logs %}
+          <li>{{ w }}</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>No workouts logged yet.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
