@@ -1,7 +1,45 @@
 from flask import Flask, render_template, request, redirect, url_for, session
+import psycopg2 as psy
+
+# Databse info
+#########################
+hostname = 'dpg-cv501ql2ng1s73fl3f00-a.oregon-postgres.render.com'
+database = 'gym_membership_application'
+username = 'gym_membership_application_user'
+pwd = '9JDl6xuzyUUZe2mbSoYfTQXxZWllT5IL'
+port_id = 5432
+#########################
+
+conn = psy.connect (
+        host = hostname,
+        dbname = database,
+        user = username,
+        password = pwd,
+        port = port_id )
+
+cur = conn.cursor()
+
+cur.execute('''
+    CREATE TABLE IF NOT EXISTS GYM_MEMBER (
+    member_id SERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    first_name VARCHAR(255),
+    last_name VARCHAR(255),
+    phone_number VARCHAR(15), 
+    register_date DATE DEFAULT CURRENT_DATE
+    )''')
+
+conn.commit()
+
+cur.close()
+conn.close()
+
 
 app = Flask(__name__)
 app.secret_key = "SOME_SECRET_KEY"  # Replace with a secure key in production
+
+
 
 
 # ---------------------------------------------------------------------
@@ -24,10 +62,8 @@ FITNESS_CLASSES = [
 
 WORKOUT_LOGS = []  # Just appending strings here as demonstration.
 
-# [DB CODE PLACEHOLDER]: Replace with real user check or remove once integrated
 MOCK_EMAIL = "user@example.com"
 MOCK_PASSWORD = "password123"
-
 
 @app.route("/")
 def home():
@@ -36,6 +72,39 @@ def home():
         return redirect(url_for("dashboard"))
     return redirect(url_for("login"))
 
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    conn = psy.connect (
+        host = hostname,
+        dbname = database,
+        user = username,
+        password = pwd,
+        port = port_id )
+
+    cur = conn.cursor()
+
+    if request.method == "POST":
+        email = request.form.get("email")
+        password = request.form.get("password")
+        fname = request.form.get("first name")
+        lname = request.form.get("last name")
+        phonenum = request.form.get("phone")
+
+        try:
+            cur.execute('''INSERT INTO GYM_MEMBER(email,password,first_name,last_name,phone_number) 
+                        values (%s, %s, %s, %s, %s) ''',
+                        (email, password, fname, lname, phonenum))
+            conn.commit() 
+            return redirect(url_for("login"))
+        except Exception as e:
+            conn.rollback()
+            return render_template("register.html", error="Error Registering")
+ 
+    
+    cur.close()
+    conn.close()
+
+    return render_template("register.html")
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -121,5 +190,5 @@ def dashboard():
     )
 
 
-if __name__ == "__main__":
+if __name__ == "__main__": 
     app.run(debug=True)

@@ -9,7 +9,7 @@
   <div class="error">{{ error }}</div>
   {% endif %}
 
-  <form method="POST" action="{{ url_for('login') }}">
+  <form method="POST" action="/login">
     <div class="form-group">
       <label for="email">Email:</label>
       <input type="text" name="email" required />
@@ -23,4 +23,5 @@
     <button type="submit">Log In</button>
   </form>
 </div>
+<p class="bottom">Don't have an account?  <a class="bottom" href="/register"> Sign Up here</a></p>
 {% endblock %}
