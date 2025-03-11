@@ -1,7 +1,39 @@
 from flask import Flask, render_template, request, redirect, url_for, session
+import psycopg2 as psy
+
+# Databse info
+#########################
+hostname = 'dpg-cv501ql2ng1s73fl3f00-a.oregon-postgres.render.com'
+database = 'gym_membership_application'
+username = 'gym_membership_application_user'
+pwd = '9JDl6xuzyUUZe2mbSoYfTQXxZWllT5IL'
+port_id = 5432
+#########################
+
+conn = None
+cur = None 
+
+
 
 app = Flask(__name__)
 app.secret_key = "SOME_SECRET_KEY"  # Replace with a secure key in production
+
+
+def setup():
+    membership_plan_create_table_script = '''
+    CREATE TABLE IF NOT EXISTS MEMBERSHIP_PLANS (
+    plan_id NUMBER PRIMARY KEY,
+    plan_name VARCHAR2(255) NOT NULL,
+    membership_duration INTERVAL DAY TO SECOND NOT NULL,
+    price NUMBER NOT NULL
+    );
+    '''
+    
+    if(cur.execute(membership_plan_create_table_script)):
+        print("Membership plan table create")
+    else:
+        print("Did not create membership plan table")
+
 
 
 # ---------------------------------------------------------------------
@@ -121,5 +153,17 @@ def dashboard():
     )
 
 
+
 if __name__ == "__main__":
+    conn = psy.connect(
+        host = hostname,
+        dbname = database,
+        user = username,
+        password = pwd,
+        port = port_id
+    )
+
+    setup()
     app.run(debug=True)
+
+    conn.close()
