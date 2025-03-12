@@ -1,5 +1,5 @@
 # local environment files
-.venv
+.venv/
 
 # pycache
-__pycache__
+__pycache__/
