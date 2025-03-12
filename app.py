@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 import psycopg2 as psy
+from werkzeug.security import check_password_hash, generate_password_hash
 
 # Databse info
 #########################
@@ -86,6 +87,7 @@ def register():
     if request.method == "POST":
         email = request.form.get("email")
         password = request.form.get("password")
+        hashed_password = generate_password_hash(password)
         fname = request.form.get("first name")
         lname = request.form.get("last name")
         phonenum = request.form.get("phone")
@@ -93,12 +95,15 @@ def register():
         try:
             cur.execute('''INSERT INTO GYM_MEMBER(email,password,first_name,last_name,phone_number) 
                         values (%s, %s, %s, %s, %s) ''',
-                        (email, password, fname, lname, phonenum))
+                        (email, hashed_password, fname, lname, phonenum))
             conn.commit() 
             return redirect(url_for("login"))
+        except psy.IntegrityError:
+            conn.rollback
+            return render_template("register.html", error="Email has already been registered")
         except Exception as e:
             conn.rollback()
-            return render_template("register.html", error="Error Registering")
+            return render_template("register.html", error="An error occurred: " + str(e))
  
     
     cur.close()
@@ -108,29 +113,31 @@ def register():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    """
-    This is a simplified login page.
-    Later, you'll likely do:
-    1) Check user from the DB
-    2) Validate password (hashed)
-    3) Set session
-    """
+    conn = psy.connect (
+        host = hostname,
+        dbname = database,
+        user = username,
+        password = pwd,
+        port = port_id )
+
+    cur = conn.cursor()
+
     if request.method == "POST":
         email = request.form.get("email")
         password = request.form.get("password")
 
-        # [DB CODE PLACEHOLDER]:
-        #   Replace the following lines with your DB user lookup
-        #   user = User.query.filter_by(email=email).first()
-        #   if user and check_password(user.password, password):
-        #       session["user_id"] = user.id
-        #       ...
-
-        if email == MOCK_EMAIL and password == MOCK_PASSWORD:
-            session["user_email"] = email  # Mock "logged in"
+        cur.execute('''SELECT * FROM GYM_MEMBER WHERE email = %s ''', (email,))
+        user = cur.fetchone()
+        cur.close()
+        conn.close()
+        if user and check_password_hash(user[2], password):
+            session["user_email"] = email
             return redirect(url_for("dashboard"))
+        elif user:
+            return render_template("login.html", error="Invalid password. Try again.")
         else:
-            return render_template("login.html", error="Invalid credentials. Try again.")
+            return render_template("login.html", error="Email not found. Try again.")
+            
 
     return render_template("login.html")
 

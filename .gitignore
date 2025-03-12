@@ -1,0 +1,5 @@
+# local environment files
+.venv
+
+# pycache
+__pycache__
