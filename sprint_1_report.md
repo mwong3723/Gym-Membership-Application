@@ -17,14 +17,6 @@ Here are links to the issues that we completed in this sprint:
  * ISSUE 3 : https://github.com/mwong3723/Gym-Membership-Application/issues/17
  * ISSUE 4 : https://github.com/mwong3723/Gym-Membership-Application/issues/18
 
- Desirables (Remove this section when you save the file):
-  * Each issue should be assigned to a milestone
-  * Each completed issue should be assigned to a pull request
-  * Each completed pull request should include a link to a "Before and After" video
-  * All team members who contributed to the issue should be assigned to it on GitHub
-  * Each issue should be assigned story points using a label
-  * Story points contribution of each team member should be indicated in a comment
- 
 
 ## Code Files for Review
 Please review the following code files, which were actively developed during this sprint, for quality:
