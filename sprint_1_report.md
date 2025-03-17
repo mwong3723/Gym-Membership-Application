@@ -33,16 +33,15 @@ Please review the following code files, which were actively developed during thi
  
 ## Retrospective Summary
 Here's what went well:
-  * Item 1
-  * Item 2
-  * Item x
+  * Team members completed their tasks in a timely manner.
+  * Effective communication regarding progress.
+  * Project workflow improved over time as initial setup challenges were resolved.
  
 Here's what we'd like to improve:
-   * Item 1
-   * Item 2
-   * Item x
+   * Initial project setup was slow, which delayed early progress.
+   * Late start on tasks reduced the time available for additional improvements.
   
 Here are changes we plan to implement in the next sprint:
-   * Item 1
-   * Item 2
-   * Item x
+   * Earlier Start on Tasks: Begin working on tasks as soon as the sprint starts to allow more time for improvements and additional features.
+   * Streamline Initial Setup for New Sprints: Document setup processes and best practices to ensure smoother onboarding and faster initial progress.
+   * Enhance Sprint Planning: Allocate more time for planning at the start of each sprint to identify potential bottlenecks early and set realistic goals.
