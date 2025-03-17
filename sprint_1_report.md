@@ -12,9 +12,10 @@ The primary objective of this sprint is to set up the ground work of our applica
 ## Completed Issues/User Stories
 Here are links to the issues that we completed in this sprint:
 
- * URL of issue 1
- * URL of issue 2
- * URL of issue n
+ * ISSUE 1 : https://github.com/mwong3723/Gym-Membership-Application/issues/5
+ * ISSUE 2 : https://github.com/mwong3723/Gym-Membership-Application/issues/8
+ * ISSUE 3 : https://github.com/mwong3723/Gym-Membership-Application/issues/17
+ * ISSUE 4 : https://github.com/mwong3723/Gym-Membership-Application/issues/18
 
  Desirables (Remove this section when you save the file):
   * Each issue should be assigned to a milestone
