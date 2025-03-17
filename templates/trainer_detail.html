@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Trainer Profile - Gym App{% endblock %}
+
+{% block content %}
+<div class="container">
+  <section class="card">
+    <h2>Trainer Profile</h2>
+    <p><strong>Name:</strong> {{ trainer.name }}</p>
+    <p><strong>Expertise:</strong> {{ trainer.expertise }}</p>
+    <p><strong>Availability:</strong> {{ trainer.availability }}</p>
+    <p><strong>Bio:</strong> {{ trainer.bio }}</p>
+  </section>
+</div>
+{% endblock %}
+    

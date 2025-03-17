@@ -7,10 +7,17 @@
   </head>
   <body>
     <header>
-      <h1>Gym Management</h1>
+      <h1>Gym Membership</h1>
       <nav>
-        <a href="{{ url_for('dashboard') }}">Dashboard</a> |
-        <a href="{{ url_for('logout') }}">Logout</a>
+        <!-- If user is logged in, show Dashboard/Trainers/Logout -->
+        {% if session.user_email %}
+          <a href="{{ url_for('dashboard') }}">Dashboard</a> |
+          <a href="{{ url_for('trainers') }}">View Trainers</a> |
+          <a href="{{ url_for('logout') }}">Logout</a>
+        {% else %}
+          <a href="{{ url_for('login') }}">Login</a> |
+          <a href="{{ url_for('register') }}">Register</a>
+        {% endif %}
       </nav>
     </header>
 

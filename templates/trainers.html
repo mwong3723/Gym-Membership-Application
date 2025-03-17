@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Trainers - Gym App{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h2>Our Trainers</h2>
+  <section class="card">
+    {% if trainers %}
+      <ul>
+        {% for t in trainers %}
+          <li>
+            <strong>{{ t.name }}</strong> (Expertise: {{ t.expertise }}) 
+            - Availability: {{ t.availability }}<br/>
+            <a href="{{ url_for('trainer_detail', trainer_id=t.id) }}">View Profile</a>
+          </li>
+          <br/>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>No trainers available.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
