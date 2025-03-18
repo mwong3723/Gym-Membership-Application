@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 import psycopg2 as psy
 from werkzeug.security import check_password_hash, generate_password_hash
+import tables
 
 # Databse info
 #########################
@@ -11,30 +12,30 @@ pwd = '9JDl6xuzyUUZe2mbSoYfTQXxZWllT5IL'
 port_id = 5432
 #########################
 
-conn = psy.connect (
-        host = hostname,
-        dbname = database,
-        user = username,
-        password = pwd,
-        port = port_id )
+# conn = psy.connect (
+#         host = hostname,
+#         dbname = database,
+#         user = username,
+#         password = pwd,
+#         port = port_id )
 
-cur = conn.cursor()
+# cur = conn.cursor()
 
-cur.execute('''
-    CREATE TABLE IF NOT EXISTS GYM_MEMBER (
-    member_id SERIAL PRIMARY KEY,
-    email VARCHAR(255) UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    first_name VARCHAR(255),
-    last_name VARCHAR(255),
-    phone_number VARCHAR(15), 
-    register_date DATE DEFAULT CURRENT_DATE
-    )''')
+# cur.execute('''
+#     CREATE TABLE IF NOT EXISTS GYM_MEMBER (
+#     member_id SERIAL PRIMARY KEY,
+#     email VARCHAR(255) UNIQUE,
+#     password VARCHAR(255) NOT NULL,
+#     first_name VARCHAR(255),
+#     last_name VARCHAR(255),
+#     phone_number VARCHAR(15), 
+#     register_date DATE DEFAULT CURRENT_DATE
+#     )''')
 
-conn.commit()
+# conn.commit()
 
-cur.close()
-conn.close()
+# cur.close()
+# conn.close()
 
 
 app = Flask(__name__)
@@ -198,4 +199,5 @@ def dashboard():
 
 
 if __name__ == "__main__": 
+    tables.initTables(hostname, database, username,pwd, port_id)
     app.run(debug=True)
