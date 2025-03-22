@@ -40,6 +40,25 @@ try:
 except Exception as e:
     print("Error ensuring GYM_MEMBER table exists:", e)
 
+try:
+    conn = psy.connect(host=hostname, dbname=database, user=username, password=pwd, port=port_id)
+    cur = conn.cursor()
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS TRAINER (
+            trainer_id SERIAL PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            expertise VARCHAR(255),
+            availability VARCHAR(100),
+            bio TEXT
+        );
+    ''')
+    conn.commit()
+    cur.close()
+    conn.close()
+except Exception as e:
+    print("Error ensuring TRAINER table exists:", e)
+
+
 # ---------------------------------------------------------------------
 # Mock Data (for demonstration)
 # Eventually replace these with DB tables if desired
@@ -96,21 +115,28 @@ def add_trainer():
 # Trainer Routes (DB-based)
 # ---------------------------------------------------------------------
 @app.route("/trainers")
-def trainers():
-    """
-    Displays all trainers from the TRAINER table.
-    """
+def trainer_list():
     if "user_email" not in session:
         return redirect(url_for("login"))
 
     try:
-        conn = psy.connect(host=hostname, dbname=database, user=username, password=pwd, port=port_id)
+        conn = psy.connect(
+            host=hostname, 
+            dbname=database, 
+            user=username, 
+            password=pwd, 
+            port=port_id
+        )
         cur = conn.cursor()
-        cur.execute("SELECT trainer_id, name, expertise, availability, bio FROM TRAINER;")
+        
+        # If your table is quoted uppercase, do this:
+        cur.execute('SELECT trainer_id, name, expertise, availability, bio FROM "TRAINER";')
+        
         rows = cur.fetchall()
         cur.close()
         conn.close()
 
+        # Convert each row to a dict
         trainers = []
         for row in rows:
             trainers.append({
@@ -124,6 +150,7 @@ def trainers():
         return render_template("trainers.html", trainers=trainers)
     except Exception as e:
         return f"Error fetching trainers: {e}"
+
 
 
 @app.route("/trainer/<int:trainer_id>")
