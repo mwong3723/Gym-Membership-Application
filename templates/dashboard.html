@@ -66,5 +66,26 @@
       <p>No workouts logged yet.</p>
     {% endif %}
   </section>
+
+  <!-- TRAINER PROFILES -->
+  <section class="card">
+    <h3>Our Trainers</h3>
+    {% if trainers %}
+      <ul>
+        {% for t in trainers %}
+          <li>
+            <strong>{{ t.name }}</strong><br>
+            Expertise: {{ t.expertise }}<br>
+            Availability: {{ t.availability }}<br>
+            <em>{{ t.bio }}</em>
+          </li>
+          <br>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>No trainer information available.</p>
+    {% endif %}
+  </section>
+
 </div>
 {% endblock %}
