@@ -19,7 +19,7 @@
       <label for="plan_id">Select a Plan:</label>
       <select name="plan_id">
         {% for plan in membership_plans %}
-          <option value="{{ plan.id }}">{{ plan.name }} – {{ plan.duration }} – {{ plan.price }}</option>
+          <option value="{{ plan.id }}">{{ plan.name }} – {{ plan.length }} – {{ plan.price }}</option>
         {% endfor %}
       </select>
       <button type="submit">Update Membership</button>
@@ -66,5 +66,21 @@
       <p>No workouts logged yet.</p>
     {% endif %}
   </section>
+
+  <!-- TRAINER PROFILES -->
+  <section class="card">
+    <h3>Our Trainers</h3>
+    <ul>
+      {% for t in trainers %}
+        <li>
+          <strong>{{ t.name }}</strong><br>
+          Expertise: {{ t.expertise }}<br>            
+          Availability: {{ t.availability }}<br>
+        </li>
+        <br>
+      {% endfor %}
+    </ul>
+  </section>
+
 </div>
 {% endblock %}
