@@ -12,37 +12,8 @@ pwd = '9JDl6xuzyUUZe2mbSoYfTQXxZWllT5IL'
 port_id = 5432
 #########################
 
-# conn = psy.connect (
-#         host = hostname,
-#         dbname = database,
-#         user = username,
-#         password = pwd,
-#         port = port_id )
-
-# cur = conn.cursor()
-
-# cur.execute('''
-#     CREATE TABLE IF NOT EXISTS GYM_MEMBER (
-#     member_id SERIAL PRIMARY KEY,
-#     email VARCHAR(255) UNIQUE,
-#     password VARCHAR(255) NOT NULL,
-#     first_name VARCHAR(255),
-#     last_name VARCHAR(255),
-#     phone_number VARCHAR(15), 
-#     register_date DATE DEFAULT CURRENT_DATE
-#     )''')
-
-# conn.commit()
-
-# cur.close()
-# conn.close()
-
-
 app = Flask(__name__)
 app.secret_key = "SOME_SECRET_KEY"  # Replace with a secure key in production
-
-
-
 
 # ---------------------------------------------------------------------
 # MOCK DATA (No Real DB Yet!)
@@ -50,17 +21,17 @@ app.secret_key = "SOME_SECRET_KEY"  # Replace with a secure key in production
 # [DB CODE PLACEHOLDER]: Once you have your DB, remove these lists and
 #   replace them with actual queries that fetch data from PostgreSQL.
 # ---------------------------------------------------------------------
-MEMBERSHIP_PLANS = [
-    {"id": 1, "name": "Basic Plan", "duration": "1 Month", "price": "$20"},
-    {"id": 2, "name": "Premium Plan", "duration": "3 Months", "price": "$50"},
-    {"id": 3, "name": "Annual Plan", "duration": "12 Months", "price": "$180"},
-]
+# MEMBERSHIP_PLANS = [
+#     {"id": 1, "name": "Basic Plan", "duration": "1 Month", "price": "$20"},
+#     {"id": 2, "name": "Premium Plan", "duration": "3 Months", "price": "$50"},
+#     {"id": 3, "name": "Annual Plan", "duration": "12 Months", "price": "$180"},
+# ]
 
-FITNESS_CLASSES = [
-    {"id": 1, "name": "Yoga Class", "day": "Monday", "time": "8:00 AM"},
-    {"id": 2, "name": "Spin Class", "day": "Wednesday", "time": "6:00 PM"},
-    {"id": 3, "name": "HIIT Class", "day": "Friday", "time": "7:00 AM"},
-]
+# FITNESS_CLASSES = [
+#     {"id": 1, "name": "Yoga Class", "day": "Monday", "time": "8:00 AM"},
+#     {"id": 2, "name": "Spin Class", "day": "Wednesday", "time": "6:00 PM"},
+#     {"id": 3, "name": "HIIT Class", "day": "Friday", "time": "7:00 AM"},
+# ]
 
 WORKOUT_LOGS = []  # Just appending strings here as demonstration.
 
@@ -199,5 +170,5 @@ def dashboard():
 
 
 if __name__ == "__main__": 
-    tables.initTables(hostname, database, username,pwd, port_id)
+    tables.initTables(hostname, database, username, pwd, port_id)
     app.run(debug=True)
