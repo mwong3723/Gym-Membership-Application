@@ -1,12 +1,12 @@
 # Sprint 1 Report 
 Video Link: 
 ## What's New (User Facing)
- * Basic User Interface
- * User Registration and Log In
- * Database Setup
+ * Creating Table Schemas for all tables, Created Log Workouts
+ * Connecting Trainer UI with database, Created Membership selection
+ * Created Admin Dashboard and ability to login as administrator
 
 ## Work Summary (Developer Facing)
-The primary objective of this sprint is to set up the ground work of our application in order to make the development of features in later sprints more efficient. 
+The primary objective of this sprint was to further develop user features so that we can have a good outline of our project that in the next sprint we can start fine tuneing certain features or details
 
 
 ## Completed Issues/User Stories
@@ -25,15 +25,11 @@ Please review the following code files, which were actively developed during thi
  
 ## Retrospective Summary
 Here's what went well:
-  * Team members completed their tasks in a timely manner.
-  * Effective communication regarding progress.
-  * Project workflow improved over time as initial setup challenges were resolved.
+  * Now that we all had an idea of how the sprint went, everything went even smoother.
+  * We were able to set out times to meet more frequently to talk and work on our project together so things were more streamlined.
  
 Here's what we'd like to improve:
-   * Initial project setup was slow, which delayed early progress.
-   * Late start on tasks reduced the time available for additional improvements.
+   * The only thing that did not go well was finding a time to meet to record the video.
   
 Here are changes we plan to implement in the next sprint:
-   * Earlier Start on Tasks: Begin working on tasks as soon as the sprint starts to allow more time for improvements and additional features.
-   * Streamline Initial Setup for New Sprints: Document setup processes and best practices to ensure smoother onboarding and faster initial progress.
-   * Enhance Sprint Planning: Allocate more time for planning at the start of each sprint to identify potential bottlenecks early and set realistic goals.
+   * Sharing our schedules for the week so we can plan accordingly
