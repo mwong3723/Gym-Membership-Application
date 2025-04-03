@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Trainers</title>
+</head>
+<body>
+  <h1>List of Trainers</h1>
+  <ul>
+    {% for t in trainers %}
+      <li>
+        <strong>{{ t.name }}</strong> —
+        Expertise: {{ t.expertise }} —
+        Availability: {{ t.availability }}<br>
+        <a href="{{ url_for('trainer_detail', trainer_id=t.trainer_id) }}">View Profile</a>
+      </li>
+      <br>
+    {% endfor %}
+  </ul>
+</body>
+</html>

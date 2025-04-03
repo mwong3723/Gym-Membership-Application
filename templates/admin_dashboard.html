@@ -1,0 +1,117 @@
+<html> 
+    <head> 
+        <title>Admin Dashboard</title> 
+    </head>
+    <nav>
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </nav>
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul>
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+    <body> 
+        <h1>Membership Plans</h1>
+            <h3>Insert a new plan</h3> 
+
+        <form action="/admin_dashboard/create" method="post"> 
+            <input type="text" name="name" placeholder="Name"> 
+            <input type="text" name="length" placeholder="Length"> 
+            <input type="text" name="price" placeholder="Price"> 
+            <input type="submit" value="Create"> 
+        </form> 
+
+        <table> 
+            <thead> 
+                <tr> 
+                    <th>ID</th> 
+                    <th>Name</th>
+                    <th>Length</th> 
+                    <th>Price</th> 
+                </tr> 
+            </thead> 
+            <tbody> 
+                {% for row in plans %} 
+                <tr> 
+                    <td>{{ row.id }}</td> 
+                    <td>{{ row.name }}</td> 
+                    <td>{{ row.length }} month(s)</td> 
+                    <td>{{ row.price }}</td> 
+                    <td> 
+                        <form action="/admin_dashboard/update" method="post"> 
+                        <input type="hidden" name="id" value="{{ row.id }}"> 
+                        <input type="text" name="name" value="{{ row.name }}"> 
+                        <input type="text" name="length" value="{{ row.length }}"> 
+                        <input type="text" name="price" value="{{ row.price }}"> 
+                        <input type="submit" value="Update"> 
+                        </form> 
+                    </td>
+                    <td>
+                        <form action="/admin_dashboard/delete" method="post"> 
+                        <input type="hidden" name="id" value="{{ row.id }}"> 
+                        <input type="submit" value="Delete"> 
+                        </form>
+                    </td>
+                </tr> 
+                {% endfor %} 
+            </tbody> 
+        </table> 
+    </body> 
+
+    <!-- TEMPLATE FOR IMPLEMENTING CHANGING TRAINERS OR CLASSES -->
+    <!-- <body> 
+        <h1></h1>
+            <h3>Insert a new plan</h3> 
+            
+        <form action="/admin_dashboard/create" method="post"> 
+            <input type="text" name="name" placeholder="Name"> 
+            <input type="text" name="length" placeholder="Length"> 
+            <input type="text" name="price" placeholder="Price"> 
+            <input type="submit" value="Create"> 
+        </form> 
+
+        <table> 
+            <thead> 
+                <tr> 
+                    <th>ID</th> 
+                    <th>Name</th>
+                    <th>Length</th> 
+                    <th>Price</th> 
+                </tr> 
+            </thead> 
+            <tbody> 
+                {% for row in plans %} 
+                <tr> 
+                    <td>{{ row.id }}</td> 
+                    <td>{{ row.name }}</td> 
+                    <td>{{ row.length }} month(s)</td> 
+                    <td>{{ row.price }}</td> 
+                    <td> 
+                        <form action="/admin_dashboard/update" method="post"> 
+                        <input type="hidden" name="id" value="{{ row.id }}"> 
+                        <input type="text" name="name" value="{{ row.name }}"> 
+                        <input type="text" name="length" value="{{ row.length }}"> 
+                        <input type="text" name="price" value="{{ row.price }}"> 
+                        <input type="submit" value="Update"> 
+                        </form> 
+                    </td>
+                    <td>
+                        <form action="/admin_dashboard/delete" method="post"> 
+                        <input type="hidden" name="id" value="{{ row.id }}"> 
+                        <input type="submit" value="Delete"> 
+                        </form>
+                    </td>
+                </tr> 
+                {% endfor %} 
+            </tbody> 
+        </table> 
+    </body>  -->
+</html> 
