@@ -12,10 +12,11 @@ The primary objective of this sprint was to further develop user features so tha
 ## Completed Issues/User Stories
 Here are links to the issues that we completed in this sprint:
 
- * ISSUE 1 : https://github.com/mwong3723/Gym-Membership-Application/issues/5
- * ISSUE 2 : https://github.com/mwong3723/Gym-Membership-Application/issues/8
- * ISSUE 3 : https://github.com/mwong3723/Gym-Membership-Application/issues/17
- * ISSUE 4 : https://github.com/mwong3723/Gym-Membership-Application/issues/18
+ * ISSUE 1 : https://github.com/mwong3723/Gym-Membership-Application/issues/19
+ * ISSUE 2 : https://github.com/mwong3723/Gym-Membership-Application/issues/13
+ * ISSUE 3 : https://github.com/mwong3723/Gym-Membership-Application/issues/11
+ * ISSUE 4 : https://github.com/mwong3723/Gym-Membership-Application/issues/10
+ * ISSUE 5 : https://github.com/mwong3723/Gym-Membership-Application/issues/6
 
 
 ## Code Files for Review
