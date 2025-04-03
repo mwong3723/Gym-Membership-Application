@@ -19,12 +19,61 @@
       <label for="plan_id">Select a Plan:</label>
       <select name="plan_id">
         {% for plan in membership_plans %}
-          <option value="{{ plan.id }}">{{ plan.name }} – {{ plan.length }} – {{ plan.price }}</option>
+          <option value="{{ plan.id }}">{{ plan.name }} – {{ plan.length }} month(s)– {{ plan.price }}</option>
         {% endfor %}
       </select>
-      <button type="submit">Update Membership</button>
+      <button type="submit">Select Membership</button>
     </form>
   </section>
+
+    <!-- MEMBERSHIP SHOWING UP -->
+    <section class="card">
+      <h3>Your Membership History</h3>
+      <ul>
+        {% if membership %}
+        <table>
+          <thead>
+            <tr>
+              <th>Plan</th>
+              <th>Start</th>
+              <th>End</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for j in membership %}
+            <tr>
+              {% for plan in membership_plans %}
+                  {% if j.plan_id == plan.id %}
+                    <td>{{ plan.name }}</td>
+                  {% endif %}
+              {% endfor %}
+              <td>{{ j.start_date }}</td>
+              <td>{{ j.end_date }}</td>
+              <td>{{ j.status }}</td>
+              <td>
+                <form method="POST"> 
+                  <input type="hidden" name="update" value="renew"> 
+                  <input type="hidden" name="plan_id" value="{{ j.plan_id }}">
+                  <input type="submit" value="Renew"> 
+                </form>
+              </td>
+              <td>
+                <form method="POST"> 
+                  <input type="hidden" name="update" value="cancel"> 
+                  <input type="hidden" name="plan_id" value="{{ j.plan_id }}">
+                  <input type="submit" value="Cancel"> 
+                </form>
+              </td>
+            {% endfor %}
+            </tr>
+          </tbody>
+        </table>
+        {% else %}
+          <p>No Memberships</p>
+        {% endif %}
+      </ul>
+    </section>
 
   <!-- CLASS BOOKING -->
   <section class="card">
@@ -75,7 +124,7 @@
         <li>
           <strong>{{ t.name }}</strong><br>
           Expertise: {{ t.expertise }}<br>            
-          Availability: {{ t.availability }}<br>
+          contact_info: {{ t.contact }}<br>
         </li>
         <br>
       {% endfor %}
