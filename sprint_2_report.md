@@ -1,4 +1,4 @@
-# Sprint 1 Report 
+# Sprint 2 Report 
 Video Link: 
 ## What's New (User Facing)
  * Creating Table Schemas for all tables, Created Log Workouts
