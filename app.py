@@ -115,7 +115,7 @@ def add_trainer():
 # Trainer Routes (DB-based)
 # ---------------------------------------------------------------------
 @app.route("/trainers")
-def trainer_list():
+def trainers():
     if "user_email" not in session:
         return redirect(url_for("login"))
 
@@ -125,12 +125,12 @@ def trainer_list():
             dbname=database, 
             user=username, 
             password=pwd, 
-            port=port_id
+            port=port_id    
         )
         cur = conn.cursor()
         
         # If your table is quoted uppercase, do this:
-        cur.execute('SELECT trainer_id, name, expertise, availability, bio FROM "TRAINER";')
+        cur.execute('SELECT trainer_id, name, expertise, contact_info FROM "trainer";')
         
         rows = cur.fetchall()
         cur.close()
@@ -143,8 +143,7 @@ def trainer_list():
                 "trainer_id": row[0],
                 "name": row[1],
                 "expertise": row[2],
-                "availability": row[3],
-                "bio": row[4]
+                "contact_info": row[3]
             })
 
         return render_template("trainers.html", trainers=trainers)
