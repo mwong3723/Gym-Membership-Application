@@ -163,7 +163,7 @@ def trainer_detail(trainer_id):
     try:
         conn = psy.connect(host=hostname, dbname=database, user=username, password=pwd, port=port_id)
         cur = conn.cursor()
-        cur.execute("SELECT trainer_id, name, expertise, availability, bio FROM TRAINER WHERE trainer_id = %s;", (trainer_id,))
+        cur.execute("SELECT trainer_id, name, expertise, contact_info, description FROM TRAINER WHERE trainer_id = %s;", (trainer_id,))
         row = cur.fetchone()
         cur.close()
         conn.close()
@@ -175,8 +175,8 @@ def trainer_detail(trainer_id):
             "trainer_id": row[0],
             "name": row[1],
             "expertise": row[2],
-            "availability": row[3],
-            "bio": row[4]
+            "contact_info": row[3],
+            "description": row[4]
         }
         return render_template("trainer_detail.html", trainer=trainer)
     except Exception as e:
