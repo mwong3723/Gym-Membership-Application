@@ -8,11 +8,13 @@ from dateutil.relativedelta import relativedelta
 
 
 # Database Connection Info
-hostname = 'dpg-cv501ql2ng1s73fl3f00-a.oregon-postgres.render.com'
-database = 'gym_membership_application'
-username = 'gym_membership_application_user'
-pwd = '9JDl6xuzyUUZe2mbSoYfTQXxZWllT5IL'
+hostname = 'dpg-cvoqt3adbo4c73b7ot6g-a.oregon-postgres.render.com'
+database = 'dbname_uvr7'
+username = 'dbname'
+pwd = 'u4TY7DucVnYJPmFjAKSgnJZsRoLCoDia'
 port_id = 5432
+
+tables.initTables(hostname, database, username, pwd, port_id)
 
 app = Flask(__name__)
 app.secret_key = "SOME_SECRET_KEY"  # Replace with a secure key in production
@@ -25,50 +27,15 @@ FITNESS_CLASSES = [
 
 WORKOUT_LOGS = []  # We'll store workouts in memory for now
 
-
-@app.route("/add_trainer", methods=["GET", "POST"])
-def add_trainer():
-
-    if request.method == "POST":
-        name = request.form.get("name")
-        expertise = request.form.get("expertise")
-        availability = request.form.get("availability")
-        bio = request.form.get("bio")
-
-        try:
-            conn = get_db_connection()
-            cur = conn.cursor()
-            cur.execute('''
-                INSERT INTO TRAINER (name, expertise, availability, bio)
-                VALUES (%s, %s, %s, %s)
-            ''', (name, expertise, availability, bio))
-            conn.commit()
-            cur.close()
-            conn.close()
-            return redirect(url_for("trainer_list"))
-        except Exception as e:
-            return f"Error inserting trainer: {e}"
-
-    return render_template("add_trainer.html")
-
 @app.route("/trainers")
 def trainer_list():
     if "user_email" not in session:
         return redirect(url_for("login"))
 
     try:
-        conn = psy.connect(
-            host=hostname, 
-            dbname=database, 
-            user=username, 
-            password=pwd, 
-            port=port_id
-        )
+        conn = get_db_connection()
         cur = conn.cursor()
-        
-        # If your table is quoted uppercase, do this:
-        cur.execute('SELECT trainer_id, name, expertise, availability, bio FROM "TRAINER";')
-        
+        cur.execute('SELECT * FROM Trainer;')
         rows = cur.fetchall()
         cur.close()
         conn.close()
@@ -80,7 +47,7 @@ def trainer_list():
                 "trainer_id": row[0],
                 "name": row[1],
                 "expertise": row[2],
-                "availability": row[3],
+                "contact_info": row[3],
                 "bio": row[4]
             })
 
@@ -97,9 +64,9 @@ def trainer_detail(trainer_id):
         return redirect(url_for("login"))
 
     try:
-        conn = psy.connect(host=hostname, dbname=database, user=username, password=pwd, port=port_id)
+        conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute("SELECT trainer_id, name, expertise, availability, bio FROM TRAINER WHERE trainer_id = %s;", (trainer_id,))
+        cur.execute("SELECT * FROM trainer WHERE trainer_id = %s;", (trainer_id,))
         row = cur.fetchone()
         cur.close()
         conn.close()
@@ -111,7 +78,7 @@ def trainer_detail(trainer_id):
             "trainer_id": row[0],
             "name": row[1],
             "expertise": row[2],
-            "availability": row[3],
+            "contact_info": row[3],
             "bio": row[4]
         }
         return render_template("trainer_detail.html", trainer=trainer)
@@ -131,7 +98,6 @@ def home():
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
-    """ User Registration: create an account in the GYM_MEMBER table. """
     if request.method == "POST":
         email = request.form.get("email")
         password = request.form.get("password")
@@ -299,30 +265,8 @@ def dashboard():
             cur.close()
             conn.close()
 
-            
-
     plans = []
-    trainers = []
     memberships = []
-
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT * from Trainer;")
-        rows = cur.fetchall()
-        cur.close()
-        conn.close()
-
-        for row in rows:
-            trainers.append({
-                "trainer_id": row[0],
-                "name": row[1],
-                "expertise": row[2],
-                "contact_info": row[3]
-            })
-
-    except Exception as e:
-        message = f"Error fetching trainers: {e}"
 
     try:
         conn = get_db_connection()
@@ -368,23 +312,25 @@ def dashboard():
             membership=memberships,
             fitness_classes=FITNESS_CLASSES,
             workout_logs=WORKOUT_LOGS,
-            trainers=trainers,  # pass trainer info if you want to display it
             message=message
         )
 
 @app.route("/admin_dashboard", methods=["GET", "POST"])
 def admin_dashboard():
     plans = []
+    trainers = []
     message = None
     try:
         conn = get_db_connection()
         cur = conn.cursor()
         cur.execute("SELECT * FROM MembershipPlan")
-        data = cur.fetchall()
+        planData = cur.fetchall()
+        cur.execute("SELECT * FROM Trainer")
+        trainerData = cur.fetchall()
         cur.close()
         conn.close()
 
-        for row in data:
+        for row in planData:
             plans.append({
                 "id": row[0],
                 "name": row[1],
@@ -392,10 +338,98 @@ def admin_dashboard():
                 "price": row[3]
             })
         
+        for row in trainerData:
+            trainers.append({
+                "id": row[0],
+                "name": row[1],
+                "expertise": row[2],
+                "contact_info": row[3],
+                "description": row[4]
+            })
+        
     except Exception as e:
         message=f"Error accessing database: {e}"
     
-    return render_template("admin_dashboard.html", plans=plans, error=message)
+    if request.method == "POST":
+        operation = request.form.get("trainer")
+
+        if operation == "insert":
+            name = request.form.get("name")
+            expertise = request.form.get("expertise")
+            contact = request.form.get("contact_info")
+            desc = request.form.get("description")
+
+            if not name:
+                flash("Trainer name cannot be left empty", "error")
+                return redirect(url_for('admin_dashboard'))
+            
+            if not contact:
+                flash("Trainer must have contact information", "error")
+                return redirect(url_for('admin_dashboard'))
+            
+            try:
+                conn = get_db_connection()
+                cur = conn.cursor()
+                cur.execute('''
+                        INSERT INTO Trainer (name, expertise, contact_info, description)
+                        VALUES (%s, %s, %s, %s)
+                    ''', (name, expertise, contact, desc,))
+                conn.commit()
+                cur.close()
+                conn.close()
+            
+            except Exception as e:
+                print(f"Error with database: {e}")
+
+            return redirect(url_for('admin_dashboard'))
+        
+        elif operation == "update":
+            id = request.form.get("id")
+            name = request.form.get("name")
+            expertise = request.form.get("expertise")
+            contact = request.form.get("contact_info")
+            desc = request.form.get("description")
+
+            if not name:
+                flash("Trainer name cannot be left empty", "error")
+                return redirect(url_for('admin_dashboard'))
+            
+            if not contact:
+                flash("Trainer must have contact information", "error")
+                return redirect(url_for('admin_dashboard'))
+
+            try:
+                conn = get_db_connection()
+                cur = conn.cursor()
+                cur.execute(
+                '''UPDATE Trainer SET name=%s, expertise=%s, contact_info=%s, description=%s where trainer_id=%s''', 
+                (name, expertise, contact, desc, id,))
+                conn.commit()
+                cur.close()
+                conn.close()
+            
+            except Exception as e:
+                print(f"Error with database: {e}")
+
+            return redirect(url_for('admin_dashboard'))
+        
+        elif operation == "delete":
+            id = request.form.get("id")
+            try:
+                conn = get_db_connection()
+                cur = conn.cursor()
+                cur.execute('''DELETE FROM Trainer where trainer_id = %s''', (id,))
+                conn.commit()
+                cur.close()
+                conn.close()
+
+            except Exception as e:
+                print(f"Error with database: {e}")
+            
+            return redirect(url_for('admin_dashboard'))
+
+
+    return render_template("admin_dashboard.html", plans=plans, trainers=trainers, error=message)
 
 @app.route("/admin_dashboard/create", methods=["GET","POST"])
 def createPlan():
@@ -447,7 +481,6 @@ def deletePlan():
         
         except Exception as e:
             print(f"Error with database: {e}")
-            print(f"The id retrived is: {id}")
         
         return redirect(url_for('admin_dashboard'))
     
@@ -489,5 +522,4 @@ def updatePlan():
 
     
 if __name__ == "__main__": 
-    tables.initTables(hostname, database, username, pwd, port_id)
     app.run(debug=True)

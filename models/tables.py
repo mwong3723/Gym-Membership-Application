@@ -40,7 +40,8 @@ CREATE TABLE IF NOT EXISTS Trainer (
     trainer_id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     expertise TEXT,
-    contact_info TEXT
+    contact_info TEXT,
+    description TEXT
 );
 '''
 

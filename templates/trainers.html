@@ -1,20 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Gym App{% endblock %}
+
+{% block content %}
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Trainers</title>
+    <title>List of Trainers</title>
 </head>
 <body>
   <h1>List of Trainers</h1>
-  <ul>
-    {% for t in trainers %}
-      <li>
-        <strong>{{ t.name }}</strong> —
-        Expertise: {{ t.expertise }} —
-        Availability: {{ t.availability }}<br>
-        <a href="{{ url_for('trainer_detail', trainer_id=t.trainer_id) }}">View Profile</a>
-      </li>
-      <br>
-    {% endfor %}
-  </ul>
+  
+  {% if trainers %}
+    <ul>
+      {% for t in trainers %}
+        <li>
+          <strong>{{ t.name }}</strong> (Expertise: {{ t.expertise }})<br>
+          <a href="{{ url_for('trainer_detail', trainer_id=t.trainer_id) }}">
+            View Profile
+          </a>
+        </li>
+        <br>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No trainers found.</p>
+  {% endif %}
+
 </body>
 </html>
+{% endblock %}
