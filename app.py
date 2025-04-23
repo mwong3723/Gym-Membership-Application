@@ -8,10 +8,10 @@ from dateutil.relativedelta import relativedelta
 
 
 # Database Connection Info
-hostname = 'dpg-cv501ql2ng1s73fl3f00-a.oregon-postgres.render.com'
-database = 'gym_membership_application'
-username = 'gym_membership_application_user'
-pwd = '9JDl6xuzyUUZe2mbSoYfTQXxZWllT5IL'
+hostname = 'dpg-cvoqt3adbo4c73b7ot6g-a.oregon-postgres.render.com'
+database = 'dbname_uvr7'
+username = 'dbname'
+pwd = 'u4TY7DucVnYJPmFjAKSgnJZsRoLCoDia'
 port_id = 5432
 
 app = Flask(__name__)
