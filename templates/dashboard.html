@@ -120,14 +120,9 @@
   <section class="card">
     <h3>Our Trainers</h3>
     <ul>
-      {% for t in trainers %}
-        <li>
-          <strong>{{ t.name }}</strong><br>
-          Expertise: {{ t.expertise }}<br>            
-          contact_info: {{ t.contact }}<br>
-        </li>
-        <br>
-      {% endfor %}
+      <a href="{{ url_for ('trainer_list') }}">
+        View List of Trainers
+      </a>
     </ul>
   </section>
 
