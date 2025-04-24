@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Trainer Report</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Trainer Report</h1>
+        <a href="{{ url_for('admin_dashboard') }}">← Back to Admin Dashboard</a>
+        <hr>
+
+        {% if report %}
+            <h2>{{ report.trainer_name }}</h2>
+            <p><strong>Total Workouts Logged:</strong> {{ report.total_workouts }}</p>
+
+            <ul>
+                {% for workout in report.workouts %}
+                    <li>{{ workout.date }} - {{ workout.description }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No report data available.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
