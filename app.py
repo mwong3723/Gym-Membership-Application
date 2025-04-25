@@ -431,95 +431,51 @@ def admin_dashboard():
 
     return render_template("admin_dashboard.html", plans=plans, trainers=trainers, error=message)
 
-@app.route("/admin_dashboard/create", methods=["GET","POST"])
-def createPlan():
-    if request.method == "POST":
-        name = request.form.get("name")
-        length = request.form.get("length")
-        price = request.form.get("price")
 
-        if not name:
-            flash("Plan name cannot be left empty", "error")
-            return redirect(url_for('admin_dashboard'))
 
-        
-        if not length or not length.isdigit():
-            flash("Duration must be an integer", "error")
-            return redirect(url_for('admin_dashboard'))
-        
-        if not price:
-            flash("Price must be a valid number", "error")
-            return redirect(url_for('admin_dashboard'))
-        
-        try:
-            conn = get_db_connection()
-            cur = conn.cursor()
-            cur.execute('''
-                    INSERT INTO MembershipPlan (plan_name, duration, price)
-                    VALUES (%s, %s, %s)
-                ''', (name, length, price))
-            conn.commit()
-            cur.close()
-            conn.close()
-        
-        except Exception as e:
-            print(f"Error with database: {e}")
-        
-        return redirect(url_for('admin_dashboard'))
+@app.route("/admin_dashboard/generate_report", methods=["POST"])
+def generate_trainer_report():
+    print("==== Trainer Report Route Triggered ====")
 
-@app.route("/admin_dashboard/delete", methods=["GET","POST"])
-def deletePlan():
-    if request.method == "POST":
-        id = request.form.get("id")
-        try:
-            conn = get_db_connection()
-            cur = conn.cursor()
-            cur.execute('''DELETE FROM MembershipPlan where plan_id = %s''', (id,))
-            conn.commit()
-            cur.close()
-            conn.close()
-        
-        except Exception as e:
-            print(f"Error with database: {e}")
-        
-        return redirect(url_for('admin_dashboard'))
-    
-@app.route("/admin_dashboard/update", methods=["GET","POST"])
-def updatePlan():
-    if request.method == "POST":
-        id = request.form.get("id")
-        name = request.form.get("name")
-        length = request.form.get("length")
-        price = request.form.get("price")
+    trainer_id = request.form.get("trainer_id")
 
-        if not name:
-            flash("Plan name cannot be left empty", "error")
-            return redirect(url_for('admin_dashboard'))
+    if not trainer_id:
+        flash("No trainer selected for report.", "error")
+        return redirect(url_for("admin_dashboard"))
 
-        
-        if not length or not length.isdigit():
-            flash("Duration must be an integer", "error")
-            return redirect(url_for('admin_dashboard'))
-        
-        if not price:
-            flash("Price must be a valid number", "error")
-            return redirect(url_for('admin_dashboard'))
-        
-        try:
-            conn = get_db_connection()
-            cur = conn.cursor()
-            cur.execute(
-                '''UPDATE MembershipPlan SET plan_name=%s, duration=%s, price=%s where plan_id=%s''', 
-                (name, length, price, id,))
-            conn.commit()
-            cur.close()
-            conn.close()
-        
-        except Exception as e:
-            print(f"Error with database: {e}")
-        
-        return redirect(url_for('admin_dashboard'))
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
 
-    
+        # Fetch full trainer details
+        cur.execute("""
+            SELECT trainer_id, name, expertise, contact_info, description 
+            FROM Trainer 
+            WHERE trainer_id = %s;
+        """, (trainer_id,))
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if not row:
+            flash("Trainer not found.", "error")
+            return redirect(url_for("admin_dashboard"))
+
+        trainer = {
+            "id": row[0],
+            "name": row[1],
+            "expertise": row[2],
+            "contact_info": row[3],
+            "description": row[4]
+        }
+
+        return render_template("trainer_report.html", trainer=trainer)
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        flash(f"Error generating report: {e}", "error")
+        return redirect(url_for("admin_dashboard"))
+
 if __name__ == "__main__": 
     app.run(debug=True)

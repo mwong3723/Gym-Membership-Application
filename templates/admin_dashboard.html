@@ -1,124 +1,147 @@
-<html> 
-    <head> 
-        <title>Admin Dashboard</title> 
-    </head>
-    <nav>
-        <a href="{{ url_for('logout') }}">Logout</a>
-    </nav>
-    {% if error %}
-        <div class="error">{{ error }}</div>
-    {% endif %}
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <ul>
-                {% for category, message in messages %}
-                    <li class="{{ category }}">{{ message }}</li>
-                {% endfor %}
-            </ul>
+    <html> 
+        <head> 
+            <title>Admin Dashboard</title> 
+        </head>
+        <nav>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </nav>
+        {% if error %}
+            <div class="error">{{ error }}</div>
         {% endif %}
-    {% endwith %}
-    <body> 
-        <h1>Membership Plans</h1>
-            <h3>Insert a new plan</h3> 
 
-        <form action="/admin_dashboard/create" method="post"> 
-            <input type="text" name="name" placeholder="Name"> 
-            <input type="text" name="length" placeholder="Length"> 
-            <input type="text" name="price" placeholder="Price"> 
-            <input type="submit" value="Create"> 
-        </form> 
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul>
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+        <body> 
+            <h1>Membership Plans</h1>
+                <h3>Insert a new plan</h3> 
 
-        <table> 
-            <thead> 
-                <tr> 
-                    <th>ID</th> 
-                    <th>Name</th>
-                    <th>Length</th> 
-                    <th>Price</th> 
-                </tr> 
-            </thead> 
-            <tbody> 
-                {% for row in plans %} 
-                <tr> 
-                    <td>{{ row.id }}</td> 
-                    <td>{{ row.name }}</td> 
-                    <td>{{ row.length }} month(s)</td> 
-                    <td>{{ row.price }}</td> 
-                    <td> 
-                        <form action="/admin_dashboard/update" method="post"> 
-                        <input type="hidden" name="id" value="{{ row.id }}"> 
-                        <input type="text" name="name" value="{{ row.name }}"> 
-                        <input type="text" name="length" value="{{ row.length }}"> 
-                        <input type="text" name="price" value="{{ row.price }}"> 
-                        <input type="submit" value="Update"> 
-                        </form> 
-                    </td>
-                    <td>
-                        <form action="/admin_dashboard/delete" method="post"> 
-                        <input type="hidden" name="id" value="{{ row.id }}"> 
-                        <input type="submit" value="Delete"> 
-                        </form>
-                    </td>
-                </tr> 
-                {% endfor %} 
-            </tbody> 
-        </table> 
-    </body> 
+            <form action="/admin_dashboard/create" method="post"> 
+                <input type="text" name="name" placeholder="Name"> 
+                <input type="text" name="length" placeholder="Length"> 
+                <input type="text" name="price" placeholder="Price"> 
+                <input type="submit" value="Create"> 
+            </form> 
 
-    <!-- TEMPLATE FOR IMPLEMENTING CHANGING TRAINERS OR CLASSES -->
-    <body> 
-        <h1>Trainers</h1>
-            <h3>Insert a new trainer</h3> 
-            
-        <form method="post"> 
-            <input type="hidden" name="trainer" value="insert">
-            <input type="text" name="name" placeholder="Name"> 
-            <input type="text" name="expertise" placeholder="Expertise"> 
-            <input type="text" name="contact_info" placeholder="Contact info"> 
-            <input type="text" name="description" placeholder="Description"> 
-            <input type="submit" value="Add"> 
-        </form> 
-
-        <table> 
-            <thead> 
-                <tr> 
-                    <th>ID</th> 
-                    <th>Name</th>
-                    <th>Expertise</th> 
-                    <th>Contact Info</th> 
-                    <th>Description</th>  
-                </tr> 
-            </thead> 
-            <tbody> 
-                {% for row in trainers %} 
-                <tr> 
-                    <td>{{ row.id }}</td> 
-                    <td>{{ row.name }}</td> 
-                    <td>{{ row.expertise }}</td> 
-                    <td>{{ row.contact_info }}</td> 
-                    <td>{{ row.description }}</td> 
-                    <td colspan="2">  <!-- You can merge the last two columns to hold the form -->
-                        <form method="post" style="display: flex; gap: 10px; align-items: center;">
-                            <input type="hidden" name="trainer" value="update"> 
+            <table> 
+                <thead> 
+                    <tr> 
+                        <th>ID</th> 
+                        <th>Name</th>
+                        <th>Length</th> 
+                        <th>Price</th> 
+                    </tr> 
+                </thead> 
+                <tbody> 
+                    {% for row in plans %} 
+                    <tr> 
+                        <td>{{ row.id }}</td> 
+                        <td>{{ row.name }}</td> 
+                        <td>{{ row.length }} month(s)</td> 
+                        <td>{{ row.price }}</td> 
+                        <td> 
+                            <form action="/admin_dashboard/update" method="post"> 
                             <input type="hidden" name="id" value="{{ row.id }}"> 
-                            <input type="text" name="name" value="{{ row.name }}" placeholder="Name">
-                            <input type="text" name="expertise" value="{{ row.expertise }}" placeholder="Expertise">
-                            <input type="text" name="contact_info" value="{{ row.contact_info }}" placeholder="Contact Info">
-                            <input type="text" name="description" value="{{ row.description }}" placeholder="Description">
-                            <input type="submit" value="Update">
-                        </form>
-                    </td>
-                    <td>
-                        <form method="post"> 
-                            <input type="hidden" name="trainer" value="delete"> 
+                            <input type="text" name="name" value="{{ row.name }}"> 
+                            <input type="text" name="length" value="{{ row.length }}"> 
+                            <input type="text" name="price" value="{{ row.price }}"> 
+                            <input type="submit" value="Update"> 
+                            </form> 
+                        </td>
+                        <td>
+                            <form action="/admin_dashboard/delete" method="post"> 
                             <input type="hidden" name="id" value="{{ row.id }}"> 
-                            <input type="submit" value="Remove"> 
-                        </form>
-                    </td>
-                </tr> 
-                {% endfor %} 
-            </tbody>            
-        </table> 
-    </body> 
-</html> 
+                            <input type="submit" value="Delete"> 
+                            </form>
+                        </td>
+                    </tr> 
+                    {% endfor %} 
+                </tbody> 
+            </table> 
+        </body> 
+
+        <!-- TEMPLATE FOR IMPLEMENTING CHANGING TRAINERS OR CLASSES -->
+        <body> 
+            <h1>Trainers</h1>
+                <h3>Insert a new trainer</h3> 
+                
+            <form method="post"> 
+                <input type="hidden" name="trainer" value="insert">
+                <input type="text" name="name" placeholder="Name"> 
+                <input type="text" name="expertise" placeholder="Expertise"> 
+                <input type="text" name="contact_info" placeholder="Contact info"> 
+                <input type="text" name="description" placeholder="Description"> 
+                <input type="submit" value="Add"> 
+            </form> 
+
+            <table> 
+                <thead> 
+                    <tr> 
+                        <th>ID</th> 
+                        <th>Name</th>
+                        <th>Expertise</th> 
+                        <th>Contact Info</th> 
+                        <th>Description</th>  
+                    </tr> 
+                </thead> 
+                <tbody> 
+                    {% for row in trainers %} 
+                    <tr> 
+                        <td>{{ row.id }}</td> 
+                        <td>{{ row.name }}</td> 
+                        <td>{{ row.expertise }}</td> 
+                        <td>{{ row.contact_info }}</td> 
+                        <td>{{ row.description }}</td> 
+                        <td colspan="2">  <!-- You can merge the last two columns to hold the form -->
+                            <form method="post" style="display: flex; gap: 10px; align-items: center;">
+                                <input type="hidden" name="trainer" value="update"> 
+                                <input type="hidden" name="id" value="{{ row.id }}"> 
+                                <input type="text" name="name" value="{{ row.name }}" placeholder="Name">
+                                <input type="text" name="expertise" value="{{ row.expertise }}" placeholder="Expertise">
+                                <input type="text" name="contact_info" value="{{ row.contact_info }}" placeholder="Contact Info">
+                                <input type="text" name="description" value="{{ row.description }}" placeholder="Description">
+                                <input type="submit" value="Update">
+                            </form>
+                        </td>
+                        <td>
+                            <form method="post"> 
+                                <input type="hidden" name="trainer" value="delete"> 
+                                <input type="hidden" name="id" value="{{ row.id }}"> 
+                                <input type="submit" value="Remove"> 
+                            </form>
+                        </td>
+                    </tr> 
+                    {% endfor %} 
+                </tbody>            
+            </table> 
+            <!-- Generating Report dropdown and button -->
+            <hr>
+            <h2>Generate Trainer Report</h2>
+            <form method="POST" action="/admin_dashboard/generate_report">
+                <label for="trainer_id">Select Trainer:</label>
+                <select name="trainer_id" id="trainer_id">
+                    {% for row in trainers %}
+                        <option value="{{ row.id }}">{{ row.name }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit">Generate Report</button>
+            </form>
+
+            {% if report %}
+                <h3>Report for {{ report.trainer_name }}</h3>
+                <p><strong>Total Workouts Logged:</strong> {{ report.total_workouts }}</p>
+                <ul>
+                    {% for workout in report.workouts %}
+                        <li>{{ workout.date }} - {{ workout.description }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+        </body> 
+    </html> 
