@@ -4,6 +4,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from models import tables
 from models import get_db_connection
 from datetime import date
+from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
 
@@ -483,6 +484,36 @@ def view_classes():
         return redirect(url_for("login"))
 
     return render_template("classes.html", fitness_classes=FITNESS_CLASSES)
+
+@app.route("/admin_dashboard/create_class", methods=["POST"])
+def create_class():
+    if "admin_email" not in session:
+        return redirect(url_for("login"))
+
+    class_name = request.form.get("class_name")
+    description = request.form.get("description")
+    schedule = request.form.get("schedule")
+    capacity = request.form.get("capacity")
+    trainer_id = request.form.get("trainer_id")
+
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute('''
+            INSERT INTO FitnessClass (class_name, description, schedule, capacity, trainer_id)
+            VALUES (%s, %s, %s, %s, %s)
+        ''', (class_name, description, schedule, capacity, trainer_id))
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        flash("New fitness class created successfully!", "success")
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        flash(f"Error creating class: {e}", "error")
+
+    return redirect(url_for("admin_dashboard"))
 
 
 if __name__ == "__main__": 

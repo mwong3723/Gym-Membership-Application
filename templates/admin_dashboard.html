@@ -19,6 +19,7 @@
             {% endif %}
         {% endwith %}
         <body> 
+            <!-- Membership Plans-->
             <h1>Membership Plans</h1>
                 <h3>Insert a new plan</h3> 
 
@@ -120,6 +121,35 @@
                     {% endfor %} 
                 </tbody>            
             </table> 
+
+            <!-- New Class Scheduling -->
+            <hr>
+            <h1>Fitness Class Scheduling</h1>
+            <h3>Create a New Fitness Class</h3>
+            
+            <form method="POST" action="/admin_dashboard/create_class">
+                <label for="class_name">Class Name:</label>
+                <input type="text" name="class_name" placeholder="e.g., Yoga Basics" required><br><br>
+            
+                <label for="description">Description:</label>
+                <input type="text" name="description" placeholder="Brief description" required><br><br>
+            
+                <label for="schedule">Schedule Date & Time:</label>
+                <input type="datetime-local" name="schedule" required><br><br>
+            
+                <label for="capacity">Capacity:</label>
+                <input type="number" name="capacity" min="1" required><br><br>
+            
+                <label for="trainer_id">Assign a Trainer:</label>
+                <select name="trainer_id" required>
+                    {% for row in trainers %}
+                        <option value="{{ row.id }}">{{ row.name }}</option>
+                    {% endfor %}
+                </select><br><br>
+            
+                <button type="submit">Create Class</button>
+            </form>
+
             <!-- Generating Report dropdown and button -->
             <hr>
             <h2>Generate Trainer Report</h2>
