@@ -11,17 +11,14 @@
         <a href="{{ url_for('admin_dashboard') }}">← Back to Admin Dashboard</a>
         <hr>
 
-        {% if report %}
-            <h2>{{ report.trainer_name }}</h2>
-            <p><strong>Total Workouts Logged:</strong> {{ report.total_workouts }}</p>
-
-            <ul>
-                {% for workout in report.workouts %}
-                    <li>{{ workout.date }} - {{ workout.description }}</li>
-                {% endfor %}
-            </ul>
+        {% if trainer %}
+            <h2>{{ trainer.name }}</h2>
+            <p><strong>Trainer ID:</strong> {{ trainer.id }}</p>
+            <p><strong>Expertise:</strong> {{ trainer.expertise }}</p>
+            <p><strong>Contact Info:</strong> {{ trainer.contact_info }}</p>
+            <p><strong>Description:</strong> {{ trainer.description }}</p>
         {% else %}
-            <p>No report data available.</p>
+            <p>No trainer data available.</p>
         {% endif %}
     </div>
 </body>

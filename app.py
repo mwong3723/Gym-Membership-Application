@@ -432,10 +432,6 @@ def admin_dashboard():
     return render_template("admin_dashboard.html", plans=plans, trainers=trainers, error=message)
 
 
-# @app.route("/admin_dashboard/generate_report", methods=["POST"])
-# def generate_trainer_report():
-#     print("✅ Route is working")
-#     return "<h1>Trainer Report Reached!</h1>"
 
 @app.route("/admin_dashboard/generate_report", methods=["POST"])
 def generate_trainer_report():
@@ -451,43 +447,35 @@ def generate_trainer_report():
         conn = get_db_connection()
         cur = conn.cursor()
 
-        # Get trainer name
-        cur.execute("SELECT name FROM Trainer WHERE trainer_id = %s", (trainer_id,))
-        trainer_row = cur.fetchone()
-        if not trainer_row:
-            flash("Trainer not found.", "error")
-            return redirect(url_for("admin_dashboard"))
-
-        trainer_name = trainer_row[0]
-
-        # Get workouts
+        # Fetch full trainer details
         cur.execute("""
-            SELECT workout_date, description 
-            FROM WorkoutLog 
-            WHERE trainer_id = %s 
-            ORDER BY workout_date DESC;
+            SELECT trainer_id, name, expertise, contact_info, description 
+            FROM Trainer 
+            WHERE trainer_id = %s;
         """, (trainer_id,))
-        workout_rows = cur.fetchall()
-
+        row = cur.fetchone()
         cur.close()
         conn.close()
 
-        workouts = [{"date": row[0], "description": row[1]} for row in workout_rows]
+        if not row:
+            flash("Trainer not found.", "error")
+            return redirect(url_for("admin_dashboard"))
 
-        report = {
-            "trainer_name": trainer_name,
-            "total_workouts": len(workouts),
-            "workouts": workouts
+        trainer = {
+            "id": row[0],
+            "name": row[1],
+            "expertise": row[2],
+            "contact_info": row[3],
+            "description": row[4]
         }
 
-        return render_template("trainer_report.html", report=report)
+        return render_template("trainer_report.html", trainer=trainer)
 
     except Exception as e:
         import traceback
         traceback.print_exc()
         flash(f"Error generating report: {e}", "error")
         return redirect(url_for("admin_dashboard"))
-
 
 if __name__ == "__main__": 
     app.run(debug=True)
