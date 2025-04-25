@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Available Classes</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Available Fitness Classes</h1>
+        <a href="{{ url_for('dashboard') }}">← Back to Dashboard</a>
+        <hr>
+
+        {% if fitness_classes %}
+            <ul>
+                {% for c in fitness_classes %}
+                    <li><strong>{{ c.name }}</strong> - {{ c.day }} at {{ c.time }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No classes available at the moment.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
