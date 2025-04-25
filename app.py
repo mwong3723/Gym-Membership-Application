@@ -477,5 +477,13 @@ def generate_trainer_report():
         flash(f"Error generating report: {e}", "error")
         return redirect(url_for("admin_dashboard"))
 
+@app.route("/view_classes")
+def view_classes():
+    if "user_email" not in session:
+        return redirect(url_for("login"))
+
+    return render_template("classes.html", fitness_classes=FITNESS_CLASSES)
+
+
 if __name__ == "__main__": 
     app.run(debug=True)

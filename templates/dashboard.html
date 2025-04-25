@@ -88,6 +88,10 @@
       </select>
       <button type="submit">Book Class</button>
     </form>
+    <!-- View all classes button -->
+    <form action="{{ url_for('view_classes') }}" method="GET">
+      <button type="submit" style="margin-top: 10px;">View All Available Classes</button>
+    </form>
   </section>
 
   <!-- WORKOUT LOGGING -->
