@@ -2,8 +2,9 @@
 Video Link: 
 ## What's New (User Facing)
  * Created Admin side fitness classes so we could add, delete and edit fitness class DB information in UI
- * Connecting Trainer UI with database, Created Membership selection
- * Created Admin Dashboard and ability to login as administrator
+ * Generate trainer report
+ * Log workout connected with the DB
+ * class schedule connected to DB
 
 ## Work Summary (Developer Facing)
 The primary objective of this sprint was to further develop user features so that we can have a good outline of our project that in the next sprint we can start fine tuneing certain features or details
@@ -12,11 +13,11 @@ The primary objective of this sprint was to further develop user features so tha
 ## Completed Issues/User Stories
 Here are links to the issues that we completed in this sprint:
 
- * ISSUE 1 : https://github.com/mwong3723/Gym-Membership-Application/issues/19
- * ISSUE 2 : https://github.com/mwong3723/Gym-Membership-Application/issues/13
+ * ISSUE 1 : https://github.com/mwong3723/Gym-Membership-Application/issues/16
+ * ISSUE 2 : https://github.com/mwong3723/Gym-Membership-Application/issues/9
  * ISSUE 3 : https://github.com/mwong3723/Gym-Membership-Application/issues/11
- * ISSUE 4 : https://github.com/mwong3723/Gym-Membership-Application/issues/10
- * ISSUE 5 : https://github.com/mwong3723/Gym-Membership-Application/issues/6
+ * ISSUE 4 : https://github.com/mwong3723/Gym-Membership-Application/issues/15
+ * ISSUE 5 : https://github.com/mwong3723/Gym-Membership-Application/issues/12
 
 
 ## Code Files for Review
