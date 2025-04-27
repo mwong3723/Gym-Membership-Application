@@ -174,306 +174,403 @@ def logout():
 # ---------------------------------------------------------------------
 # Dashboard
 # ---------------------------------------------------------------------
+# ---------------------------------------------------------------------
+# Dashboard  – now loads FitnessClass from the DB
+# ---------------------------------------------------------------------
 @app.route("/dashboard", methods=["GET", "POST"])
 def dashboard():
 
+    # ---------- access control ----------
     if "user_email" not in session:
         return redirect(url_for("login"))
-    
+
+    # ---------- load current member ----------
     conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM Member WHERE email=%s",(session.get('user_email'),))
+    cur  = conn.cursor()
+    cur.execute("SELECT * FROM Member WHERE email=%s;",
+                (session.get("user_email"),))
     member = cur.fetchone()
-    cur.close()
-    conn.close()
+    cur.close(); conn.close()
 
     message = None
 
+    # =================================================================
+    # POST HANDLING  (unchanged from your original code)
+    # =================================================================
     if request.method == "POST":
         form_type = request.form.get("form_type")
-        update = request.form.get("update")
+        update    = request.form.get("update")
 
+        # ----- buy a membership plan -----
         if form_type == "membership":
             selected_plan_id = request.form.get("plan_id")
 
-            conn = get_db_connection()
-            cur = conn.cursor()
-            cur.execute("SELECT * FROM MembershipPlan where plan_id=%s",(selected_plan_id,))
+            conn = get_db_connection(); cur = conn.cursor()
+            cur.execute("SELECT * FROM MembershipPlan WHERE plan_id=%s;",
+                        (selected_plan_id,))
             plan = cur.fetchone()
-            cur.close()
-            conn.close()
+            cur.close(); conn.close()
 
             current_date = date.today()
-            end_date = current_date + relativedelta(months=(plan[2])) 
+            end_date     = current_date + relativedelta(months=plan[2])
 
             try:
-                conn = get_db_connection()
-                cur = conn.cursor()
-                cur.execute('''
-                            INSERT INTO Membership (member_id, plan_id, start_date, end_date, status) 
-                            VALUES (%s, %s, %s, %s, %s)''', (member[0],plan[0],current_date,end_date,"active",))
+                conn = get_db_connection(); cur = conn.cursor()
+                cur.execute(
+                    """
+                    INSERT INTO Membership (member_id, plan_id,
+                                            start_date, end_date, status)
+                    VALUES (%s, %s, %s, %s, %s);
+                    """,
+                    (member[0], plan[0], current_date, end_date, "active")
+                )
                 conn.commit()
-                cur.close()
-                conn.close() 
-            except Exception as e:
-                message = f"Membership already registered"
+            except Exception:
+                message = "Membership already registered"
+            finally:
+                cur.close(); conn.close()
 
-
+        # ----- book a class  (still mock) -----
         elif form_type == "book_class":
             class_id = request.form.get("class_id")
-            message = f"You booked class ID = {class_id} (Mock)"
+            message  = f"You booked class ID = {class_id} (Mock)"
 
+        # ----- log workout (mock) -----
         elif form_type == "log_workout":
-            workout_details = request.form.get("workout_details")
-            WORKOUT_LOGS.append(workout_details)
+            WORKOUT_LOGS.append(request.form.get("workout_details"))
             message = "Workout logged successfully! (Mock)"
-        
+
+        # ----- renew / cancel -----
         if update == "renew":
-            target_membership = request.form.get("plan_id")
+            target_plan = request.form.get("plan_id")
 
-            conn = get_db_connection()
-            cur = conn.cursor()
-            cur.execute("SELECT * FROM MembershipPlan where plan_id=%s",(target_membership,))
-            plan = cur.fetchone()
-            cur.close()
-            conn.close()
+            conn = get_db_connection(); cur = conn.cursor()
+            cur.execute("SELECT * FROM MembershipPlan WHERE plan_id=%s;",
+                        (target_plan,)); plan = cur.fetchone()
+            cur.execute("SELECT * FROM Membership WHERE plan_id=%s;",
+                        (target_plan,)); membership = cur.fetchone()
+            cur.close(); conn.close()
 
-            conn = get_db_connection()
-            cur = conn.cursor()
-            cur.execute("SELECT * FROM Membership where plan_id=%s",(target_membership,))
-            membership = cur.fetchone()
-            cur.close()
-            conn.close()
+            new_end = membership[3] + relativedelta(months=plan[2])
 
-            end_date = membership[3] + relativedelta(months=(plan[2])) 
-
-            conn = get_db_connection()
-            cur = conn.cursor()
-            cur.execute("UPDATE Membership SET status=%s, end_date=%s where plan_id=%s",
-                        ("renewed",end_date,target_membership,))
-            conn.commit()
-            cur.close()
-            conn.close()
+            conn = get_db_connection(); cur = conn.cursor()
+            cur.execute(
+                "UPDATE Membership SET status=%s, end_date=%s WHERE plan_id=%s;",
+                ("renewed", new_end, target_plan)
+            )
+            conn.commit(); cur.close(); conn.close()
 
         elif update == "cancel":
-            target_membership = request.form.get("plan_id")
-            conn = get_db_connection()
-            cur = conn.cursor()
-            cur.execute("UPDATE Membership SET status=%s where plan_id=%s",
-                        ("canceled",target_membership,))
-            conn.commit()
-            cur.close()
-            conn.close()
+            target_plan = request.form.get("plan_id")
+            conn = get_db_connection(); cur = conn.cursor()
+            cur.execute(
+                "UPDATE Membership SET status=%s WHERE plan_id=%s;",
+                ("canceled", target_plan)
+            )
+            conn.commit(); cur.close(); conn.close()
 
+    # =================================================================
+    # DATA LOAD  – plans, memberships, trainers (unchanged)
+    # =================================================================
     plans = []
     memberships = []
 
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM MembershipPlan")
-        rows = cur.fetchall()
-        cur.close()
-        conn.close()
-
-        for row in rows:
-            plans.append({
-                "id": row[0],
-                "name": row[1],
-                "length": row[2],
-                "price": row[3]
-            })
-
-    except Exception as e:
-        message = f"Error fetching membership plans: {e}"
+        conn = get_db_connection(); cur = conn.cursor()
+        cur.execute("SELECT * FROM MembershipPlan"); rows = cur.fetchall()
+        for r in rows:
+            plans.append({"id": r[0], "name": r[1],
+                          "length": r[2], "price": r[3]})
+    finally:
+        cur.close(); conn.close()
 
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM Membership WHERE member_id=%s", (member[0],))
+        conn = get_db_connection(); cur = conn.cursor()
+        cur.execute("SELECT * FROM Membership WHERE member_id=%s;",
+                    (member[0],))
         rows = cur.fetchall()
-        cur.close()
-        conn.close()
+        for r in rows:
+            memberships.append({"plan_id": r[1], "start_date": r[2],
+                                "end_date": r[3], "status": r[4]})
+    finally:
+        cur.close(); conn.close()
 
-        for row in rows:
-            memberships.append({
-                "plan_id": row[1],
-                "start_date": row[2],
-                "end_date": row[3],
-                "status": row[4],
-            })
-
-    except Exception as e:
-        message = f"Error fetching membership plans: {e}"
-
-    return render_template(
-            "dashboard.html",
-            membership_plans=plans,
-            membership=memberships,
-            fitness_classes=FITNESS_CLASSES,
-            workout_logs=WORKOUT_LOGS,
-            message=message
+    trainers = []
+    try:
+        conn = get_db_connection(); cur = conn.cursor()
+        cur.execute(
+            "SELECT trainer_id, name, expertise, contact_info FROM Trainer;"
         )
+        for r in cur.fetchall():
+            trainers.append({"trainer_id": r[0], "name": r[1],
+                             "expertise": r[2], "contact_info": r[3]})
+    finally:
+        cur.close(); conn.close()
+
+    # =================================================================
+    # NEW  – load fitness classes from DB (fallback to static list)
+    # =================================================================
+    try:
+        conn = get_db_connection(); cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT class_id, class_name, description,
+                   schedule, capacity, trainer_id
+              FROM FitnessClass
+             ORDER BY class_id;
+            """
+        )
+        class_rows = cur.fetchall()
+        fitness_classes = [
+            {"id": r[0], "name": r[1], "description": r[2],
+             "schedule": r[3], "capacity": r[4], "trainer_id": r[5]}
+            for r in class_rows
+        ]
+        if not fitness_classes:            # table empty
+            fitness_classes = FITNESS_CLASSES
+    except Exception as e:
+        message = f"Error loading classes: {e}"
+        fitness_classes = FITNESS_CLASSES
+    finally:
+        try:
+            cur.close(); conn.close()
+        except Exception:
+            pass
+
+    # =================================================================
+    # RENDER
+    # =================================================================
+    return render_template(
+        "dashboard.html",
+        membership_plans = plans,
+        membership       = memberships,
+        fitness_classes  = fitness_classes,
+        workout_logs     = WORKOUT_LOGS,
+        trainers         = trainers,
+        message          = message
+    )
+
+
+# ---------------------------------------------------------------------
+# Admin Dashboard + its helper routes
+# ---------------------------------------------------------------------
 
 @app.route("/admin_dashboard", methods=["GET", "POST"])
 def admin_dashboard():
-    plans = []
-    trainers = []
+    plans, trainers, classes = [], [], []
     message = None
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM MembershipPlan")
-        planData = cur.fetchall()
-        cur.execute("SELECT * FROM Trainer")
-        trainerData = cur.fetchall()
-        cur.close()
-        conn.close()
 
-        for row in planData:
-            plans.append({
-                "id": row[0],
-                "name": row[1],
-                "length": row[2],
-                "price": row[3]
-            })
-        
-        for row in trainerData:
-            trainers.append({
-                "id": row[0],
-                "name": row[1],
-                "expertise": row[2],
-                "contact_info": row[3],
-                "description": row[4]
-            })
-        
-    except Exception as e:
-        message=f"Error accessing database: {e}"
-    
+    # ===============================================================
+    # POST  ── handle Trainer or FitnessClass actions
+    # ===============================================================
     if request.method == "POST":
-        operation = request.form.get("trainer")
+        form_type = request.form.get("form_type")      # "trainer" | "class"
 
-        if operation == "insert":
-            name = request.form.get("name")
-            expertise = request.form.get("expertise")
-            contact = request.form.get("contact_info")
-            desc = request.form.get("description")
+        # ------------------ FITNESS CLASS CRUD ---------------------
+        if form_type == "class":
+            action      = request.form.get("action")   # insert / update / delete
+            class_id    = request.form.get("class_id")
+            class_name  = request.form.get("class_name")
+            description = request.form.get("description")
+            schedule    = request.form.get("schedule")
+            capacity    = request.form.get("capacity")
+            trainer_id  = request.form.get("trainer_id")
 
-            if not name:
-                flash("Trainer name cannot be left empty", "error")
-                return redirect(url_for('admin_dashboard'))
-            
-            if not contact:
-                flash("Trainer must have contact information", "error")
-                return redirect(url_for('admin_dashboard'))
-            
             try:
-                conn = get_db_connection()
-                cur = conn.cursor()
-                cur.execute('''
+                conn = get_db_connection(); cur = conn.cursor()
+
+                if action == "insert":
+                    cur.execute(
+                        """
+                        INSERT INTO FitnessClass
+                            (class_name, description, schedule,
+                             capacity, trainer_id)
+                        VALUES (%s, %s, %s, %s, %s);
+                        """,
+                        (class_name, description, schedule, capacity, trainer_id)
+                    )
+                elif action == "update":
+                    cur.execute(
+                        """
+                        UPDATE FitnessClass
+                           SET class_name=%s, description=%s, schedule=%s,
+                               capacity=%s, trainer_id=%s
+                         WHERE class_id=%s;
+                        """,
+                        (class_name, description, schedule,
+                         capacity, trainer_id, class_id)
+                    )
+                elif action == "delete":
+                    cur.execute("DELETE FROM FitnessClass WHERE class_id=%s;",
+                                (class_id,))
+                conn.commit(); flash("Class operation successful", "success")
+            except Exception as e:
+                conn.rollback(); flash(f"Class DB error: {e}", "error")
+            finally:
+                cur.close(); conn.close()
+            return redirect(url_for("admin_dashboard"))
+
+        # ------------------ TRAINER CRUD (original) ---------------
+        elif form_type == "trainer":
+            operation = request.form.get("action")      # insert / update / delete
+            tid       = request.form.get("trainer_id")
+            name      = request.form.get("name")
+            expertise = request.form.get("expertise")
+            contact   = request.form.get("contact_info")
+            desc      = request.form.get("description")
+
+            try:
+                conn = get_db_connection(); cur = conn.cursor()
+                if operation == "insert":
+                    cur.execute(
+                        """
                         INSERT INTO Trainer (name, expertise, contact_info, description)
-                        VALUES (%s, %s, %s, %s)
-                    ''', (name, expertise, contact, desc,))
-                conn.commit()
-                cur.close()
-                conn.close()
-            
+                        VALUES (%s,%s,%s,%s);
+                        """, (name, expertise, contact, desc)
+                    )
+                elif operation == "update":
+                    cur.execute(
+                        """
+                        UPDATE Trainer
+                           SET name=%s, expertise=%s, contact_info=%s, description=%s
+                         WHERE trainer_id=%s;
+                        """, (name, expertise, contact, desc, tid)
+                    )
+                elif operation == "delete":
+                    cur.execute("DELETE FROM Trainer WHERE trainer_id=%s;", (tid,))
+                conn.commit(); flash("Trainer operation successful", "success")
             except Exception as e:
-                print(f"Error with database: {e}")
+                conn.rollback(); flash(f"Trainer DB error: {e}", "error")
+            finally:
+                cur.close(); conn.close()
+            return redirect(url_for("admin_dashboard"))
 
-            return redirect(url_for('admin_dashboard'))
-        
-        elif operation == "update":
-            id = request.form.get("id")
-            name = request.form.get("name")
-            expertise = request.form.get("expertise")
-            contact = request.form.get("contact_info")
-            desc = request.form.get("description")
+    # ===============================================================
+    # GET  ── load Plans, Trainers, Classes for display
+    # ===============================================================
+    try:
+        conn = get_db_connection(); cur = conn.cursor()
 
-            if not name:
-                flash("Trainer name cannot be left empty", "error")
-                return redirect(url_for('admin_dashboard'))
-            
-            if not contact:
-                flash("Trainer must have contact information", "error")
-                return redirect(url_for('admin_dashboard'))
+        cur.execute("SELECT * FROM MembershipPlan ORDER BY plan_id;")
+        planData = cur.fetchall()
 
-            try:
-                conn = get_db_connection()
-                cur = conn.cursor()
-                cur.execute(
-                '''UPDATE Trainer SET name=%s, expertise=%s, contact_info=%s, description=%s where trainer_id=%s''', 
-                (name, expertise, contact, desc, id,))
-                conn.commit()
-                cur.close()
-                conn.close()
-            
-            except Exception as e:
-                print(f"Error with database: {e}")
+        cur.execute("SELECT * FROM Trainer ORDER BY trainer_id;")
+        trainerData = cur.fetchall()
 
-            return redirect(url_for('admin_dashboard'))
-        
-        elif operation == "delete":
-            id = request.form.get("id")
-            try:
-                conn = get_db_connection()
-                cur = conn.cursor()
-                cur.execute('''DELETE FROM Trainer where trainer_id = %s''', (id,))
-                conn.commit()
-                cur.close()
-                conn.close()
+        cur.execute("SELECT * FROM FitnessClass ORDER BY class_id;")
+        classData = cur.fetchall()
 
-            except Exception as e:
-                print(f"Error with database: {e}")
-            
-            return redirect(url_for('admin_dashboard'))
+        cur.close(); conn.close()
 
+        for p in planData:
+            plans.append({"id": p[0], "name": p[1], "length": p[2], "price": p[3]})
 
-    return render_template("admin_dashboard.html", plans=plans, trainers=trainers, error=message)
+        for t in trainerData:
+            trainers.append({
+                "id": t[0], "name": t[1], "expertise": t[2],
+                "contact_info": t[3], "description": t[4]
+            })
 
+        for c in classData:
+            classes.append({
+                "id": c[0], "name": c[1], "description": c[2],
+                "schedule": c[3], "capacity": c[4], "trainer_id": c[5]
+            })
 
+    except Exception as e:
+        message = f"Error accessing database: {e}"
 
+    return render_template(
+        "admin_dashboard.html",
+        plans    = plans,
+        trainers = trainers,
+        classes  = classes,   # NEW
+        error    = message
+    )
+
+# ------------------------------------------------------------------
+#  Membership-Plan helper routes  (unchanged)
+# ------------------------------------------------------------------
+@app.route("/admin_dashboard/create", methods=["POST"])
+def createPlan():
+    name   = request.form['name']
+    length = request.form['length']
+    price  = request.form['price']
+    if not name or not length.isdigit() or not price:
+        flash("Invalid plan data", "error")
+        return redirect(url_for('admin_dashboard'))
+    try:
+        conn = get_db_connection(); cur = conn.cursor()
+        cur.execute(
+            "INSERT INTO MembershipPlan (plan_name, duration, price) VALUES (%s, %s, %s);",
+            (name, length, price)
+        ); conn.commit()
+    finally:
+        cur.close(); conn.close()
+    return redirect(url_for('admin_dashboard'))
+
+@app.route("/admin_dashboard/update", methods=["POST"])
+def updatePlan():
+    pid    = request.form['id']
+    name   = request.form['name']
+    length = request.form['length']
+    price  = request.form['price']
+    if not name or not length.isdigit() or not price:
+        flash("Invalid plan data", "error")
+        return redirect(url_for('admin_dashboard'))
+    try:
+        conn = get_db_connection(); cur = conn.cursor()
+        cur.execute(
+            "UPDATE MembershipPlan SET plan_name=%s, duration=%s, price=%s WHERE plan_id=%s;",
+            (name, length, price, pid)
+        ); conn.commit()
+    finally:
+        cur.close(); conn.close()
+    return redirect(url_for('admin_dashboard'))
+
+@app.route("/admin_dashboard/delete", methods=["POST"])
+def deletePlan():
+    pid = request.form['id']
+    try:
+        conn = get_db_connection(); cur = conn.cursor()
+        cur.execute("DELETE FROM MembershipPlan WHERE plan_id=%s;", (pid,))
+        conn.commit()
+    finally:
+        cur.close(); conn.close()
+    return redirect(url_for('admin_dashboard'))
+
+# ------------------------------------------------------------------
+#  Trainer report route  (unchanged)
+# ------------------------------------------------------------------
 @app.route("/admin_dashboard/generate_report", methods=["POST"])
 def generate_trainer_report():
-    print("==== Trainer Report Route Triggered ====")
-
     trainer_id = request.form.get("trainer_id")
-
     if not trainer_id:
         flash("No trainer selected for report.", "error")
         return redirect(url_for("admin_dashboard"))
 
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-
-        # Fetch full trainer details
-        cur.execute("""
-            SELECT trainer_id, name, expertise, contact_info, description 
-            FROM Trainer 
-            WHERE trainer_id = %s;
-        """, (trainer_id,))
-        row = cur.fetchone()
-        cur.close()
-        conn.close()
+        conn = get_db_connection(); cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT trainer_id, name, expertise, contact_info, description
+              FROM Trainer
+             WHERE trainer_id=%s;
+            """, (trainer_id,)
+        ); row = cur.fetchone()
+        cur.close(); conn.close()
 
         if not row:
             flash("Trainer not found.", "error")
             return redirect(url_for("admin_dashboard"))
 
         trainer = {
-            "id": row[0],
-            "name": row[1],
-            "expertise": row[2],
-            "contact_info": row[3],
-            "description": row[4]
+            "id": row[0], "name": row[1], "expertise": row[2],
+            "contact_info": row[3], "description": row[4]
         }
-
         return render_template("trainer_report.html", trainer=trainer)
 
     except Exception as e:
-        import traceback
-        traceback.print_exc()
         flash(f"Error generating report: {e}", "error")
         return redirect(url_for("admin_dashboard"))
 
