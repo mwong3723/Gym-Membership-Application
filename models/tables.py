@@ -59,11 +59,11 @@ CREATE TABLE IF NOT EXISTS FitnessClass (
 
 booking_table = '''
 CREATE TABLE IF NOT EXISTS Booking (
-    booking_id SERIAL PRIMARY KEY,
     member_id INT NOT NULL,
     class_id INT NOT NULL,
     booking_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     status VARCHAR(50) CHECK (status IN ('confirmed', 'cancelled')),
+    PRIMARY KEY (member_id, class_id),
     FOREIGN KEY (member_id) REFERENCES Member(member_id) ON DELETE CASCADE,
     FOREIGN KEY (class_id) REFERENCES FitnessClass(class_id) ON DELETE CASCADE
 );

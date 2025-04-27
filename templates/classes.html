@@ -14,7 +14,10 @@
         {% if fitness_classes %}
             <ul>
                 {% for c in fitness_classes %}
-                    <li><strong>{{ c.name }}</strong> - {{ c.day }} at {{ c.time }}</li>
+                    <li style="margin-bottom: 1em;">
+                        <strong>{{ c.name }}</strong> - {{ c.schedule }} - <strong> Capacity: </strong>{{ c.capacity }}<br>
+                        <div style="margin-left: 20px;">{{ c.description }}</div>
+                    </li>
                 {% endfor %}
             </ul>
         {% else %}
