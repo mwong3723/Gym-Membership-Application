@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>Manage Fitness Classes</h2>
+  <a href="{{ url_for('create_class') }}">+ Add New Class</a>
+  <table>
+    <tr><th>ID</th><th>Name</th><th>Day</th><th>Time</th><th>Actions</th></tr>
+    {% for cls in classes %}
+      <tr>
+        <td>{{ cls[0] }}</td>
+        <td>{{ cls[1] }}</td>
+        <td>{{ cls[2] }}</td>
+        <td>{{ cls[3] }}</td>
+        <td>
+          <a href="{{ url_for('edit_class', class_id=cls[0]) }}">Edit</a>
+          <form method="post" action="{{ url_for('delete_class', class_id=cls[0]) }}" style="display:inline;">
+            <button type="submit" onclick="return confirm('Delete this class?');">Delete</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+  </table>
+{% endblock %}

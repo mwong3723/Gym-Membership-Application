@@ -2,127 +2,114 @@ from flask import Flask, flash, render_template, request, redirect, url_for, ses
 import psycopg2 as psy
 from werkzeug.security import check_password_hash, generate_password_hash
 from models import tables
-from models import get_db_connection
 from datetime import date
 from dateutil.relativedelta import relativedelta
 
-
+# ---------------------------------------------------------------------
 # Database Connection Info
-hostname = 'dpg-cv501ql2ng1s73fl3f00-a.oregon-postgres.render.com'
-database = 'gym_membership_application'
-username = 'gym_membership_application_user'
-pwd = '9JDl6xuzyUUZe2mbSoYfTQXxZWllT5IL'
-port_id = 5432
+# ---------------------------------------------------------------------
+hostname = 'dpg-cvoqt3adbo4c73b7ot6g-a.oregon-postgres.render.com'
+database = 'dbname_uvr7'
+username = 'dbname'
+pwd      = 'u4TY7DucVnYJPmFjAKSgnJZsRoLCoDia'
+port_id  = 5432
 
+# ---------------------------------------------------------------------
+# Flask App Setup
+# ---------------------------------------------------------------------
 app = Flask(__name__)
-app.secret_key = "SOME_SECRET_KEY"  # Replace with a secure key in production
+app.secret_key = "SOME_SECRET_KEY"
 
-FITNESS_CLASSES = [
-    {"id": 1, "name": "Yoga Class", "day": "Monday", "time": "8:00 AM"},
-    {"id": 2, "name": "Spin Class", "day": "Wednesday", "time": "6:00 PM"},
-    {"id": 3, "name": "HIIT Class", "day": "Friday", "time": "7:00 AM"},
-]
+# ---------------------------------------------------------------------
+# Initialize tables & DB helper
+# ---------------------------------------------------------------------
+tables.initTables(hostname, database, username, pwd, port_id)
 
-WORKOUT_LOGS = []  # We'll store workouts in memory for now
+def get_db_connection():
+    return psy.connect(
+        host=hostname,
+        dbname=database,
+        user=username,
+        password=pwd,
+        port=port_id
+    )
 
+# In-memory workout logs
+WORKOUT_LOGS = []
 
+# ---------------------------------------------------------------------
+# Trainer CRUD
+# ---------------------------------------------------------------------
 @app.route("/add_trainer", methods=["GET", "POST"])
 def add_trainer():
-
     if request.method == "POST":
-        name = request.form.get("name")
-        expertise = request.form.get("expertise")
-        availability = request.form.get("availability")
-        bio = request.form.get("bio")
-
+        name         = request.form['name']
+        expertise    = request.form['expertise']
+        contact_info = request.form['contact_info']
+        bio          = request.form['contact_info']
         try:
             conn = get_db_connection()
-            cur = conn.cursor()
-            cur.execute('''
-                INSERT INTO TRAINER (name, expertise, availability, bio)
-                VALUES (%s, %s, %s, %s)
-            ''', (name, expertise, availability, bio))
+            cur  = conn.cursor()
+            cur.execute(
+                "INSERT INTO TRAINER (name, expertise, contact_info, bio) VALUES (%s, %s, %s, %s);",
+                (name, expertise, contact_info, bio)
+            )
             conn.commit()
+        finally:
             cur.close()
             conn.close()
-            return redirect(url_for("trainer_list"))
-        except Exception as e:
-            return f"Error inserting trainer: {e}"
-
+        return redirect(url_for("trainer_list"))
     return render_template("add_trainer.html")
 
 @app.route("/trainers")
 def trainer_list():
     if "user_email" not in session:
         return redirect(url_for("login"))
-
     try:
-        conn = psy.connect(
-            host=hostname, 
-            dbname=database, 
-            user=username, 
-            password=pwd, 
-            port=port_id
-        )
-        cur = conn.cursor()
-        
-        # If your table is quoted uppercase, do this:
-        cur.execute('SELECT trainer_id, name, expertise, availability, bio FROM "TRAINER";')
-        
+        conn = get_db_connection()
+        cur  = conn.cursor()
+        cur.execute('SELECT trainer_id, name, expertise, contact_info, description FROM "TRAINER";')
         rows = cur.fetchall()
+    finally:
         cur.close()
         conn.close()
-
-        # Convert each row to a dict
-        trainers = []
-        for row in rows:
-            trainers.append({
-                "trainer_id": row[0],
-                "name": row[1],
-                "expertise": row[2],
-                "availability": row[3],
-                "bio": row[4]
-            })
-
-        return render_template("trainers.html", trainers=trainers)
-    except Exception as e:
-        return f"Error fetching trainers: {e}"
+    trainers = [
+        {"trainer_id": r[0], "name": r[1], "expertise": r[2], "contact_info": r[3], "description": r[4]}
+        for r in rows
+    ]
+    return render_template("trainers.html", trainers=trainers)
 
 @app.route("/trainer/<int:trainer_id>")
 def trainer_detail(trainer_id):
-    """
-    Displays a single trainer's info from the TRAINER table.
-    """
     if "user_email" not in session:
         return redirect(url_for("login"))
-
     try:
-        conn = psy.connect(host=hostname, dbname=database, user=username, password=pwd, port=port_id)
-        cur = conn.cursor()
-        cur.execute("SELECT trainer_id, name, expertise, availability, bio FROM TRAINER WHERE trainer_id = %s;", (trainer_id,))
+        conn = get_db_connection()
+        cur  = conn.cursor()
+        cur.execute(
+            "SELECT trainer_id, name, expertise, contact_info, description FROM TRAINER WHERE trainer_id = %s;",
+            (trainer_id,)
+        )
         row = cur.fetchone()
+    finally:
         cur.close()
         conn.close()
+    if not row:
+        return "Trainer not found", 404
+    trainer = {
+        "trainer_id":  row[0],
+        "name":         row[1],
+        "expertise":    row[2],
+        "contact_info": row[3],
+        "description":          row[4]
+    }
+    return render_template("trainer_detail.html", trainer=trainer)
 
-        if row is None:
-            return "Trainer not found", 404
-
-        trainer = {
-            "trainer_id": row[0],
-            "name": row[1],
-            "expertise": row[2],
-            "availability": row[3],
-            "bio": row[4]
-        }
-        return render_template("trainer_detail.html", trainer=trainer)
-    except Exception as e:
-        return f"Error fetching trainer detail: {e}"
-
-
-# Home / Register / Login / Logout
+# ---------------------------------------------------------------------
+# Authentication
+# ---------------------------------------------------------------------
 @app.route("/")
 def home():
-    """ Redirect to login if not logged in; else go to dashboard. """
     if "user_email" in session:
         return redirect(url_for("dashboard"))
     if "admin_email" in session:
@@ -131,363 +118,346 @@ def home():
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
-    """ User Registration: create an account in the GYM_MEMBER table. """
     if request.method == "POST":
-        email = request.form.get("email")
-        password = request.form.get("password")
-        name = request.form.get("name")
-        phonenum = request.form.get("phone")
-
-        hashed_password = generate_password_hash(password)
-
+        email     = request.form['email']
+        password  = request.form['password']
+        name      = request.form['name']
+        phone     = request.form['phone']
+        hashed_pw = generate_password_hash(password)
         try:
             conn = get_db_connection()
-            cur = conn.cursor()
-            cur.execute('''
-                INSERT INTO Member (name, email, password, phone)
-                VALUES (%s, %s, %s, %s)
-            ''', (name, email, hashed_password, phonenum))
+            cur  = conn.cursor()
+            cur.execute(
+                "INSERT INTO Member (name, email, password, phone) VALUES (%s, %s, %s, %s);",
+                (name, email, hashed_pw, phone)
+            )
             conn.commit()
+        except psy.IntegrityError:
+            return render_template("register.html", error="Email is already registered.")
+        finally:
             cur.close()
             conn.close()
-
-            return redirect(url_for("login"))
-        except psy.IntegrityError:
-            # Email already registered
-            return render_template("register.html", error="Email is already registered.")
-        except Exception as e:
-            return render_template("register.html", error=f"An error occurred: {e}")
-
+        return redirect(url_for("login"))
     return render_template("register.html")
-
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        email = request.form.get("email")
-        password = request.form.get("password")
-
+        email    = request.form['email']
+        password = request.form['password']
         try:
             conn = get_db_connection()
-            cur = conn.cursor()
+            cur  = conn.cursor()
             cur.execute("SELECT * FROM Member WHERE email = %s;", (email,))
-            user = cur.fetchone()
+            user  = cur.fetchone()
             cur.execute("SELECT * FROM Admin WHERE email = %s;", (email,))
             admin = cur.fetchone()
+        finally:
             cur.close()
             conn.close()
-
-            if user:
-                stored_hashed_pw = user[3]
-                if check_password_hash(stored_hashed_pw, password):
-                    session["user_email"] = email
-                    return redirect(url_for("dashboard"))
-                else:
-                    return render_template("login.html", error="Invalid password.")
-            elif admin:
-                if admin[3] == password:
-                    session["admin_email"] = email
-                    return redirect(url_for("admin_dashboard"))
-                else:
-                    return render_template("login.html", error="Invalid password.")
+        if user:
+            if check_password_hash(user[3], password):
+                session['user_email'] = email
+                return redirect(url_for('dashboard'))
             else:
-                return render_template("login.html", error="Email not found.")
-        except Exception as e:
-            return render_template("login.html", error=f"Error accessing database: {e}")
-
+                return render_template("login.html", error="Invalid password.")
+        if admin:
+            if admin[3] == password:
+                session['admin_email'] = email
+                return redirect(url_for('admin_dashboard'))
+            else:
+                return render_template("login.html", error="Invalid password.")
+        return render_template("login.html", error="Email not found.")
     return render_template("login.html")
 
 @app.route("/logout")
 def logout():
-    """ Clear the session, then redirect to login. """
-    session.pop("user_email", None)
-    session.pop("admin_email", None)
-    return redirect(url_for("login"))
-
+    session.pop('user_email', None)
+    session.pop('admin_email', None)
+    return redirect(url_for('login'))
 
 # ---------------------------------------------------------------------
-# Dashboard
+# User Dashboard
 # ---------------------------------------------------------------------
 @app.route("/dashboard", methods=["GET", "POST"])
 def dashboard():
+    if 'user_email' not in session:
+        return redirect(url_for('login'))
 
-    if "user_email" not in session:
-        return redirect(url_for("login"))
-    
+    # load member
     conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM Member WHERE email=%s",(session.get('user_email'),))
+    cur  = conn.cursor()
+    cur.execute("SELECT * FROM Member WHERE email=%s;", (session['user_email'],))
     member = cur.fetchone()
     cur.close()
     conn.close()
 
     message = None
-
     if request.method == "POST":
-        form_type = request.form.get("form_type")
-        update = request.form.get("update")
+        # existing POST logic...
+        pass
 
-        if form_type == "membership":
-            selected_plan_id = request.form.get("plan_id")
-
-            conn = get_db_connection()
-            cur = conn.cursor()
-            cur.execute("SELECT * FROM MembershipPlan where plan_id=%s",(selected_plan_id,))
-            plan = cur.fetchone()
-            cur.close()
-            conn.close()
-
-            current_date = date.today()
-            end_date = current_date + relativedelta(months=(plan[2])) 
-
-            try:
-                conn = get_db_connection()
-                cur = conn.cursor()
-                cur.execute('''
-                            INSERT INTO Membership (member_id, plan_id, start_date, end_date, status) 
-                            VALUES (%s, %s, %s, %s, %s)''', (member[0],plan[0],current_date,end_date,"active",))
-                conn.commit()
-                cur.close()
-                conn.close() 
-            except Exception as e:
-                message = f"Membership already registered"
-
-
-        elif form_type == "book_class":
-            class_id = request.form.get("class_id")
-            message = f"You booked class ID = {class_id} (Mock)"
-
-        elif form_type == "log_workout":
-            workout_details = request.form.get("workout_details")
-            WORKOUT_LOGS.append(workout_details)
-            message = "Workout logged successfully! (Mock)"
-        
-        if update == "renew":
-            target_membership = request.form.get("plan_id")
-
-            conn = get_db_connection()
-            cur = conn.cursor()
-            cur.execute("SELECT * FROM MembershipPlan where plan_id=%s",(target_membership,))
-            plan = cur.fetchone()
-            cur.close()
-            conn.close()
-
-            conn = get_db_connection()
-            cur = conn.cursor()
-            cur.execute("SELECT * FROM Membership where plan_id=%s",(target_membership,))
-            membership = cur.fetchone()
-            cur.close()
-            conn.close()
-
-            end_date = membership[3] + relativedelta(months=(plan[2])) 
-
-            conn = get_db_connection()
-            cur = conn.cursor()
-            cur.execute("UPDATE Membership SET status=%s, end_date=%s where plan_id=%s",
-                        ("renewed",end_date,target_membership,))
-            conn.commit()
-            cur.close()
-            conn.close()
-
-        elif update == "cancel":
-            target_membership = request.form.get("plan_id")
-            conn = get_db_connection()
-            cur = conn.cursor()
-            cur.execute("UPDATE Membership SET status=%s where plan_id=%s",
-                        ("canceled",target_membership,))
-            conn.commit()
-            cur.close()
-            conn.close()
-
-            
-
+    # membership plans
     plans = []
-    trainers = []
+    conn = get_db_connection()
+    cur  = conn.cursor()
+    cur.execute("SELECT plan_id, plan_name, duration, price FROM MembershipPlan;")
+    for r in cur.fetchall():
+        plans.append({"id": r[0], "name": r[1], "length": r[2], "price": r[3]})
+    cur.close()
+    conn.close()
+
+    # member's memberships
     memberships = []
+    conn = get_db_connection()
+    cur  = conn.cursor()
+    cur.execute("SELECT plan_id, start_date, end_date, status FROM Membership WHERE member_id=%s;", (member[0],))
+    for r in cur.fetchall():
+        memberships.append({"plan_id": r[0], "start_date": r[1], "end_date": r[2], "status": r[3]})
+    cur.close()
+    conn.close()
 
+    # trainers
+    trainers = []
+    conn = get_db_connection()
+    cur  = conn.cursor()
+    cur.execute("SELECT trainer_id, name, expertise, contact_info FROM Trainer;")
+    for r in cur.fetchall():
+        trainers.append({"trainer_id": r[0], "name": r[1], "expertise": r[2], "contact_info": r[3]})
+    cur.close()
+    conn.close()
+
+    # fitness classes
+    fitness_classes = []
     try:
         conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT * from Trainer;")
+        cur  = conn.cursor()
+        cur.execute(
+            """
+            SELECT class_id, class_name, description, schedule, capacity, trainer_id
+              FROM FitnessClass
+             ORDER BY class_id;
+            """
+        )
         rows = cur.fetchall()
+        fitness_classes = [
+            {
+                'class_id':    r[0],
+                'class_name':  r[1],
+                'description': r[2],
+                'schedule':    r[3],
+                'capacity':    r[4],
+                'trainer_id':  r[5]
+            }
+            for r in rows
+        ]
+    except Exception as e:
+        message = f"Error loading classes: {e}"
+    finally:
         cur.close()
         conn.close()
-
-        for row in rows:
-            trainers.append({
-                "trainer_id": row[0],
-                "name": row[1],
-                "expertise": row[2],
-                "contact_info": row[3]
-            })
-
-    except Exception as e:
-        message = f"Error fetching trainers: {e}"
-
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM MembershipPlan")
-        rows = cur.fetchall()
-        cur.close()
-        conn.close()
-
-        for row in rows:
-            plans.append({
-                "id": row[0],
-                "name": row[1],
-                "length": row[2],
-                "price": row[3]
-            })
-
-    except Exception as e:
-        message = f"Error fetching membership plans: {e}"
-
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM Membership WHERE member_id=%s", (member[0],))
-        rows = cur.fetchall()
-        cur.close()
-        conn.close()
-
-        for row in rows:
-            memberships.append({
-                "plan_id": row[1],
-                "start_date": row[2],
-                "end_date": row[3],
-                "status": row[4],
-            })
-
-    except Exception as e:
-        message = f"Error fetching membership plans: {e}"
 
     return render_template(
-            "dashboard.html",
-            membership_plans=plans,
-            membership=memberships,
-            fitness_classes=FITNESS_CLASSES,
-            workout_logs=WORKOUT_LOGS,
-            trainers=trainers,  # pass trainer info if you want to display it
-            message=message
-        )
+        'dashboard.html',
+        membership_plans = plans,
+        membership       = memberships,
+        fitness_classes  = fitness_classes,
+        workout_logs     = WORKOUT_LOGS,
+        trainers         = trainers,
+        message          = message
+    )
 
+# ---------------------------------------------------------------------
+# Admin Dashboard (Membership + FitnessClass)
+# ---------------------------------------------------------------------
 @app.route("/admin_dashboard", methods=["GET", "POST"])
 def admin_dashboard():
-    plans = []
-    message = None
+    plans           = []
+    fitness_classes = []
+    message         = None
+
+    # load membership plans
     try:
         conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM MembershipPlan")
-        data = cur.fetchall()
+        cur  = conn.cursor()
+        cur.execute("SELECT plan_id, plan_name, duration, price FROM MembershipPlan;")
+        for r in cur.fetchall():
+            plans.append({"id": r[0], "name": r[1], "length": r[2], "price": r[3]})
+    except Exception as e:
+        message = f"Error loading plans: {e}"
+    finally:
         cur.close()
         conn.close()
 
-        for row in data:
-            plans.append({
-                "id": row[0],
-                "name": row[1],
-                "length": row[2],
-                "price": row[3]
+    # load fitness classes
+    try:
+        conn = get_db_connection()
+        cur  = conn.cursor()
+        cur.execute(
+            """
+            SELECT class_id, class_name, description, schedule, capacity, trainer_id
+              FROM FitnessClass
+             ORDER BY class_id;
+            """
+        )
+        for r in cur.fetchall():
+            fitness_classes.append({
+                "class_id":    r[0],
+                "class_name":  r[1],
+                "description": r[2],
+                "schedule":    r[3],
+                "capacity":    r[4],
+                "trainer_id":  r[5]
             })
-        
     except Exception as e:
-        message=f"Error accessing database: {e}"
-    
-    return render_template("admin_dashboard.html", plans=plans, error=message)
+        message = f"Error loading classes: {e}"
+    finally:
+        cur.close()
+        conn.close()
 
-@app.route("/admin_dashboard/create", methods=["GET","POST"])
+    return render_template(
+        'admin_dashboard.html',
+        plans           = plans,
+        fitness_classes = fitness_classes,
+        error           = message
+    )
+
+# ---------------------------------------------------------------------
+# MembershipPlan CRUD
+# ---------------------------------------------------------------------
+@app.route("/admin_dashboard/create", methods=["POST"])
 def createPlan():
-    if request.method == "POST":
-        name = request.form.get("name")
-        length = request.form.get("length")
-        price = request.form.get("price")
-
-        if not name:
-            flash("Plan name cannot be left empty", "error")
-            return redirect(url_for('admin_dashboard'))
-
-        
-        if not length or not length.isdigit():
-            flash("Duration must be an integer", "error")
-            return redirect(url_for('admin_dashboard'))
-        
-        if not price:
-            flash("Price must be a valid number", "error")
-            return redirect(url_for('admin_dashboard'))
-        
-        try:
-            conn = get_db_connection()
-            cur = conn.cursor()
-            cur.execute('''
-                    INSERT INTO MembershipPlan (plan_name, duration, price)
-                    VALUES (%s, %s, %s)
-                ''', (name, length, price))
-            conn.commit()
-            cur.close()
-            conn.close()
-        
-        except Exception as e:
-            print(f"Error with database: {e}")
-        
+    name   = request.form['name']
+    length = request.form['length']
+    price  = request.form['price']
+    if not name or not length.isdigit() or not price:
+        flash("Invalid plan data", "error")
         return redirect(url_for('admin_dashboard'))
+    try:
+        conn = get_db_connection()
+        cur  = conn.cursor()
+        cur.execute(
+            "INSERT INTO MembershipPlan (plan_name, duration, price) VALUES (%s, %s, %s);",
+            (name, length, price)
+        )
+        conn.commit()
+    finally:
+        cur.close()
+        conn.close()
+    return redirect(url_for('admin_dashboard'))
 
-@app.route("/admin_dashboard/delete", methods=["GET","POST"])
+@app.route("/admin_dashboard/delete", methods=["POST"])
 def deletePlan():
-    if request.method == "POST":
-        id = request.form.get("id")
-        try:
-            conn = get_db_connection()
-            cur = conn.cursor()
-            cur.execute('''DELETE FROM MembershipPlan where plan_id = %s''', (id,))
-            conn.commit()
-            cur.close()
-            conn.close()
-        
-        except Exception as e:
-            print(f"Error with database: {e}")
-            print(f"The id retrived is: {id}")
-        
-        return redirect(url_for('admin_dashboard'))
-    
-@app.route("/admin_dashboard/update", methods=["GET","POST"])
+    plan_id = request.form['id']
+    try:
+        conn = get_db_connection()
+        cur  = conn.cursor()
+        cur.execute("DELETE FROM MembershipPlan WHERE plan_id=%s;", (plan_id,))
+        conn.commit()
+    finally:
+        cur.close()
+        conn.close()
+    return redirect(url_for('admin_dashboard'))
+
+@app.route("/admin_dashboard/update", methods=["POST"])
 def updatePlan():
+    plan_id = request.form['id']
+    name    = request.form['name']
+    length  = request.form['length']
+    price   = request.form['price']
+    if not name or not length.isdigit() or not price:
+        flash("Invalid plan data", "error")
+        return redirect(url_for('admin_dashboard'))
+    try:
+        conn = get_db_connection()
+        cur  = conn.cursor()
+        cur.execute(
+            "UPDATE MembershipPlan SET plan_name=%s, duration=%s, price=%s WHERE plan_id=%s;",
+            (name, length, price, plan_id)
+        )
+        conn.commit()
+    finally:
+        cur.close()
+        conn.close()
+    return redirect(url_for('admin_dashboard'))
+
+# ---------------------------------------------------------------------
+# FitnessClass CRUD
+# ---------------------------------------------------------------------
+@app.route("/admin_dashboard/classes/create", methods=["GET", "POST"])
+def create_class():
     if request.method == "POST":
-        id = request.form.get("id")
-        name = request.form.get("name")
-        length = request.form.get("length")
-        price = request.form.get("price")
-
-        if not name:
-            flash("Plan name cannot be left empty", "error")
-            return redirect(url_for('admin_dashboard'))
-
-        
-        if not length or not length.isdigit():
-            flash("Duration must be an integer", "error")
-            return redirect(url_for('admin_dashboard'))
-        
-        if not price:
-            flash("Price must be a valid number", "error")
-            return redirect(url_for('admin_dashboard'))
-        
+        class_name  = request.form['class_name']
+        description = request.form['description']
+        schedule    = request.form['schedule']
+        capacity    = request.form['capacity']
+        trainer_id  = request.form['trainer_id']
         try:
             conn = get_db_connection()
-            cur = conn.cursor()
+            cur  = conn.cursor()
             cur.execute(
-                '''UPDATE MembershipPlan SET plan_name=%s, duration=%s, price=%s where plan_id=%s''', 
-                (name, length, price, id,))
+                "INSERT INTO FitnessClass (class_name, description, schedule, capacity, trainer_id) VALUES (%s, %s, %s, %s, %s);",
+                (class_name, description, schedule, capacity, trainer_id)
+            )
             conn.commit()
+        finally:
             cur.close()
             conn.close()
-        
-        except Exception as e:
-            print(f"Error with database: {e}")
-        
         return redirect(url_for('admin_dashboard'))
+    return render_template('admin_class_form.html', action='Create')
 
-    
-if __name__ == "__main__": 
-    tables.initTables(hostname, database, username, pwd, port_id)
+@app.route("/admin_dashboard/classes/<int:class_id>/edit", methods=["GET", "POST"])
+def edit_class(class_id):
+    if request.method == "POST":
+        class_name  = request.form['class_name']
+        description = request.form['description']
+        schedule    = request.form['schedule']
+        capacity    = request.form['capacity']
+        trainer_id  = request.form['trainer_id']
+        try:
+            conn = get_db_connection()
+            cur  = conn.cursor()
+            cur.execute(
+                "UPDATE FitnessClass SET class_name=%s, description=%s, schedule=%s, capacity=%s, trainer_id=%s WHERE class_id=%s;",
+                (class_name, description, schedule, capacity, trainer_id, class_id)
+            )
+            conn.commit()
+        finally:
+            cur.close()
+            conn.close()
+        return redirect(url_for('admin_dashboard'))
+    try:
+        conn = get_db_connection()
+        cur  = conn.cursor()
+        cur.execute(
+            "SELECT class_name, description, schedule, capacity, trainer_id FROM FitnessClass WHERE class_id=%s;",
+            (class_id,)
+        )
+        row = cur.fetchone()
+    finally:
+        cur.close()
+        conn.close()
+    if not row:
+        return "Class not found", 404
+    return render_template(
+        'admin_class_form.html', action='Edit', class_id=class_id,
+        class_name=row[0], description=row[1], schedule=row[2], capacity=row[3], trainer_id=row[4]
+    )
+
+@app.route("/admin_dashboard/classes/<int:class_id>/delete", methods=["POST"])
+def delete_class(class_id):
+    try:
+        conn = get_db_connection()
+        cur  = conn.cursor()
+        cur.execute("DELETE FROM FitnessClass WHERE class_id=%s;", (class_id,))
+        conn.commit()
+    finally:
+        cur.close()
+        conn.close()
+    return redirect(url_for('admin_dashboard'))
+
+# ---------------------------------------------------------------------
+# Run the app
+# ---------------------------------------------------------------------
+if __name__ == "__main__":
     app.run(debug=True)

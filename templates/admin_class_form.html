@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>{{ action }} Fitness Class</h2>
+  <form method="post">
+    <!-- this must match request.form.get('class_name') -->
+    <label>Class Name:
+      <input type="text" name="class_name" value="{{ class_name or '' }}" required>
+    </label><br>
+
+    <label>Description:
+      <textarea name="description">{{ description or '' }}</textarea>
+    </label><br>
+
+    <label>Schedule:
+      <input type="text" name="schedule" value="{{ schedule or '' }}" required>
+    </label><br>
+
+    <label>Capacity:
+      <input type="number" name="capacity" value="{{ capacity or '' }}" required>
+    </label><br>
+
+    <label>Trainer ID:
+      <input type="text" name="trainer_id" value="{{ trainer_id or '' }}">
+    </label><br>
+
+    <button type="submit">{{ action }}</button>
+  </form>
+
+  <a href="{{ url_for('admin_dashboard') }}">← Back to Dashboard</a>
+{% endblock %}
