@@ -233,12 +233,27 @@ def dashboard():
         # ----- book a class  (still mock) -----
         elif form_type == "book_class":
             class_id = request.form.get("class_id")
-            message  = f"You booked class ID = {class_id} (Mock)"
+            
+            try:
+                conn = get_db_connection(); cur = conn.cursor()
+                cur.execute("""INSERT INTO booking (member_id, class_id, status)
+                            VALUES (%s, %s, %s); """, (member[0], class_id,"confirmed"))
+                conn.commit()
+                cur.close(); conn.close()
+                message = "Class Booked!"
+            except Exception:
+                message = "Already Booked!"
+
+
 
         # ----- log workout (mock) -----
         elif form_type == "log_workout":
-            WORKOUT_LOGS.append(request.form.get("workout_details"))
-            message = "Workout logged successfully! (Mock)"
+            conn = get_db_connection(); cur = conn.cursor()
+            cur.execute("""INSERT INTO workoutlog (member_id, workout_date, workout_details)
+                        VALUES (%s, %s, %s); """, (member[0], date.today(),request.form.get("workout_details")))
+            conn.commit()
+            cur.close(); conn.close()
+            message = "Workout logged successfully!"
 
         # ----- renew / cancel -----
         if update == "renew":
@@ -274,6 +289,15 @@ def dashboard():
     # =================================================================
     plans = []
     memberships = []
+    workout_logs = []
+
+    try:
+        conn = get_db_connection(); cur = conn.cursor()
+        cur.execute("SELECT * FROM workoutlog"); rows = cur.fetchall()
+        for r in rows:
+            workout_logs.append({"date": r[2], "details": r[3]})
+    finally:
+        cur.close(); conn.close()
 
     try:
         conn = get_db_connection(); cur = conn.cursor()
@@ -345,7 +369,7 @@ def dashboard():
         membership_plans = plans,
         membership       = memberships,
         fitness_classes  = fitness_classes,
-        workout_logs     = WORKOUT_LOGS,
+        workout_logs     = workout_logs,
         trainers         = trainers,
         message          = message
     )
@@ -579,7 +603,32 @@ def view_classes():
     if "user_email" not in session:
         return redirect(url_for("login"))
 
-    return render_template("classes.html", fitness_classes=FITNESS_CLASSES)
+    try:
+        conn = get_db_connection(); cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT class_id, class_name, description,
+                   schedule, capacity, trainer_id
+              FROM FitnessClass
+             ORDER BY class_id;
+            """
+        )
+        class_rows = cur.fetchall()
+        fitness_classes = [
+            {"id": r[0], "name": r[1], "description": r[2],
+             "schedule": r[3], "capacity": r[4], "trainer_id": r[5]}
+            for r in class_rows
+        ]
+        if not fitness_classes:            # table empty
+            fitness_classes = FITNESS_CLASSES
+    except Exception as e:
+        fitness_classes = FITNESS_CLASSES
+    finally:
+        try:
+            cur.close(); conn.close()
+        except Exception:
+            pass
+    return render_template("classes.html", fitness_classes=fitness_classes)
 
 
 if __name__ == "__main__": 

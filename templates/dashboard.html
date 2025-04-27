@@ -83,7 +83,7 @@
       <label for="class_id">Select a Class:</label>
       <select name="class_id">
         {% for c in fitness_classes %}
-          <option value="{{ c.id }}">{{ c.name }} – {{ c.day }} @ {{ c.time }}</option>
+          <option value="{{ c.id }}">{{ c.name }} – {{ c.schedule }} </option>
         {% endfor %}
       </select>
       <button type="submit">Book Class</button>
@@ -112,7 +112,7 @@
     {% if workout_logs %}
       <ul>
         {% for w in workout_logs %}
-          <li>{{ w }}</li>
+          <li>{{ w.date }} - {{ w.details }}</li>
         {% endfor %}
       </ul>
     {% else %}
