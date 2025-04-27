@@ -1,5 +1,5 @@
 # Sprint 3 Report 
-Video Link: 
+Video Link: https://youtu.be/8VFZ6FzBMXQ
 ## What's New (User Facing)
  * Created Admin side fitness classes so we could add, delete and edit fitness class DB information in UI
  * Generate trainer report
